@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Buddy">
+<title>Garrett's Buddy</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#5BBFFF">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--e-bg-a:#C8EEFF;--e-bg-b:#EAF6FF;--e-bg-c:#D4F5E8;--e-hdr-a:#5BBFFF;--e-hdr-b:#3A9FE8;--e-glow:rgba(91,191,255,.40);--e-usr-a:#5BBFFF;--e-usr-b:#3A9FE8;--e-acc:#5BBFFF;--e-ptcl:rgba(91,191,255,.16);--e-dot:#6BCB77;--e-shd:rgba(30,80,140,.12);--e-inp-bd:#C8E8FF;--e-inp-bg:#F4FAFF;--font-d:'Baloo 2',cursive;--font-b:'Nunito',sans-serif;--rbbl:22px;}
+body.emo-happy{--e-bg-a:#FFF5C0;--e-bg-b:#FFFAE8;--e-bg-c:#FFE8A8;--e-hdr-a:#FFD93D;--e-hdr-b:#F5B800;--e-glow:rgba(255,200,30,.55);--e-usr-a:#FFD93D;--e-usr-b:#F5B800;--e-acc:#FFD93D;--e-ptcl:rgba(255,210,50,.20);--e-dot:#FFD93D;--e-shd:rgba(180,120,0,.12);--e-inp-bd:#FFE88A;--e-inp-bg:#FFFCEE;}
+body.emo-excited{--e-bg-a:#FFE0F0;--e-bg-b:#FFF0FA;--e-bg-c:#FFD6EC;--e-hdr-a:#FF6EB0;--e-hdr-b:#E8409A;--e-glow:rgba(255,80,160,.50);--e-usr-a:#FF6EB0;--e-usr-b:#E8409A;--e-acc:#FF6EB0;--e-ptcl:rgba(255,110,176,.18);--e-dot:#FF6EB0;--e-shd:rgba(200,30,120,.12);--e-inp-bd:#FFB8DC;--e-inp-bg:#FFF5FB;}
+body.emo-calm{--e-bg-a:#C8EEFF;--e-bg-b:#EAF6FF;--e-bg-c:#D4F5E8;--e-hdr-a:#5BBFFF;--e-hdr-b:#3A9FE8;--e-glow:rgba(91,191,255,.40);--e-usr-a:#5BBFFF;--e-usr-b:#3A9FE8;--e-acc:#5BBFFF;--e-ptcl:rgba(91,191,255,.15);--e-dot:#6BCB77;--e-shd:rgba(30,80,140,.12);--e-inp-bd:#C8E8FF;--e-inp-bg:#F4FAFF;}
+body.emo-sad{--e-bg-a:#C8D8F8;--e-bg-b:#E0EAFF;--e-bg-c:#D0D8F0;--e-hdr-a:#6080C8;--e-hdr-b:#4060A8;--e-glow:rgba(80,100,200,.40);--e-usr-a:#6080C8;--e-usr-b:#4060A8;--e-acc:#8090D0;--e-ptcl:rgba(100,130,200,.15);--e-dot:#A0B0E0;--e-shd:rgba(40,60,140,.14);--e-inp-bd:#B0C0E8;--e-inp-bg:#EEF2FF;}
+body.emo-frustrated{--e-bg-a:#FFE4CC;--e-bg-b:#FFF2E8;--e-bg-c:#FFD8B8;--e-hdr-a:#FF8C42;--e-hdr-b:#E06820;--e-glow:rgba(255,100,40,.45);--e-usr-a:#FF8C42;--e-usr-b:#E06820;--e-acc:#FF8C42;--e-ptcl:rgba(255,120,50,.18);--e-dot:#FF8C42;--e-shd:rgba(180,80,20,.14);--e-inp-bd:#FFD0A0;--e-inp-bg:#FFF8F2;}
+body.emo-overwhelmed{--e-bg-a:#D8D0F0;--e-bg-b:#EDE8F8;--e-bg-c:#C8C0E8;--e-hdr-a:#8878C8;--e-hdr-b:#6858A8;--e-glow:rgba(120,100,200,.40);--e-usr-a:#8878C8;--e-usr-b:#6858A8;--e-acc:#9888D0;--e-ptcl:rgba(140,120,200,.14);--e-dot:#B0A0D8;--e-shd:rgba(80,60,160,.12);--e-inp-bd:#C0B8E0;--e-inp-bg:#F4F0FC;}
+body.emo-curious{--e-bg-a:#C0F0E0;--e-bg-b:#E0FBF0;--e-bg-c:#C8F8E8;--e-hdr-a:#20C0A0;--e-hdr-b:#18A080;--e-glow:rgba(20,180,140,.45);--e-usr-a:#20C0A0;--e-usr-b:#18A080;--e-acc:#20C0A0;--e-ptcl:rgba(30,180,140,.16);--e-dot:#20C0A0;--e-shd:rgba(20,120,100,.12);--e-inp-bd:#A0E8D8;--e-inp-bg:#F0FEFA;}
+body.emo-silly{--e-bg-a:#E8FFD0;--e-bg-b:#F8FFF0;--e-bg-c:#D8FFB8;--e-hdr-a:#88DD22;--e-hdr-b:#66BB00;--e-glow:rgba(100,200,20,.50);--e-usr-a:#88DD22;--e-usr-b:#66BB00;--e-acc:#88DD22;--e-ptcl:rgba(120,220,30,.18);--e-dot:#88DD22;--e-shd:rgba(60,140,10,.12);--e-inp-bd:#C8F088;--e-inp-bg:#F8FFF0;}
+body.emo-winddown{--e-bg-a:#D8E8FF;--e-bg-b:#E8F0FF;--e-bg-c:#C8D8F0;--e-hdr-a:#8898C8;--e-hdr-b:#6878A8;--e-glow:rgba(100,120,200,.35);--e-usr-a:#8898C8;--e-usr-b:#6878A8;--e-acc:#8898C8;--e-ptcl:rgba(100,120,180,.10);--e-dot:#A0B0D8;--e-shd:rgba(60,80,140,.10);--e-inp-bd:#C0CCEC;--e-inp-bg:#F0F4FF;}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;overflow:hidden;font-family:var(--font-b);color:#1a2744;}
+body{background:linear-gradient(160deg,var(--e-bg-a) 0%,var(--e-bg-b) 60%,var(--e-bg-c) 100%);transition:background 1.4s ease;}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;transition:opacity .4s ease,transform .4s ease;}
+.screen.hidden{opacity:0;pointer-events:none;transform:scale(.97);}
+#particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.particle{position:absolute;border-radius:50%;background:var(--e-ptcl);transition:background 1.4s ease;animation:pdrift var(--pd,18s) ease-in-out infinite var(--pdl,0s);}
+@keyframes pdrift{0%,100%{transform:translate(0,0) scale(1);opacity:.6;}25%{transform:translate(var(--p1x,30px),var(--p1y,-40px)) scale(1.1);opacity:.9;}50%{transform:translate(var(--p2x,-20px),var(--p2y,-70px)) scale(.9);opacity:.5;}75%{transform:translate(var(--p3x,50px),var(--p3y,-30px)) scale(1.05);opacity:.8;}}
+body.emo-silly .particle{border-radius:30% 70% 60% 40%;}
+body.emo-excited .particle{border-radius:40% 60% 55% 45%;}
+body.emo-overwhelmed .particle,body.emo-winddown .particle{animation-duration:32s!important;opacity:.3!important;}
+#emo-pill{position:fixed;top:14px;right:14px;z-index:50;background:rgba(255,255,255,.78);backdrop-filter:blur(10px);border-radius:40px;padding:5px 14px 5px 9px;font-size:13px;font-weight:700;color:#3a5270;display:flex;align-items:center;gap:5px;box-shadow:0 2px 12px rgba(0,0,0,.09);transition:all 1s ease;opacity:0;pointer-events:none;}
+#emo-pill.vis{opacity:1;}#pill-em{font-size:17px;}
+#bb-bar{position:fixed;top:0;left:0;right:0;z-index:200;background:linear-gradient(135deg,#FFD93D,#FFB347);padding:10px 16px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;transform:translateY(-100%);transition:transform .5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 3px 16px rgba(255,160,0,.3);}
+#bb-bar.show{transform:translateY(0);}
+#bb-bar-label{font-family:var(--font-d);font-size:14px;font-weight:800;color:#7a3800;display:flex;align-items:center;gap:6px;}
+#bb-progress-wrap{width:100%;max-width:320px;height:8px;background:rgba(255,255,255,.4);border-radius:4px;overflow:hidden;}
+#bb-progress{height:100%;background:white;border-radius:4px;transition:width 1s linear;width:100%;}
+
+/* SETUP */
+#setup-screen{align-items:center;justify-content:center;padding:40px 32px;overflow-y:auto;z-index:2;background:linear-gradient(160deg,#a8d8ff 0%,#c8f0e8 50%,#ffe8a8 100%);}
+.setup-sky{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.star{position:absolute;width:6px;height:6px;background:white;border-radius:50%;animation:twinkle var(--d,3s) ease-in-out infinite var(--dl,0s);}
+@keyframes twinkle{0%,100%{opacity:.2;transform:scale(1);}50%{opacity:1;transform:scale(1.4);}}
+.buddy-intro{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:22px;max-width:500px;width:100%;}
+.av-large{width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,#FFE066 0%,#FFB347 100%);display:flex;align-items:center;justify-content:center;font-size:72px;box-shadow:0 8px 32px rgba(255,180,60,.4),0 0 0 8px rgba(255,255,255,.5);animation:float 3s ease-in-out infinite;position:relative;}
+.av-large::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:3px dashed rgba(255,255,255,.6);animation:spin 12s linear infinite;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.setup-title{font-family:var(--font-d);font-size:32px;font-weight:800;color:#1a2744;text-align:center;line-height:1.2;text-shadow:0 2px 0 rgba(255,255,255,.6);}
+.setup-sub{font-size:17px;color:#3a5270;text-align:center;line-height:1.6;font-weight:600;max-width:380px;}
+.name-wrap{width:100%;display:flex;flex-direction:column;gap:12px;}
+.name-lbl{font-family:var(--font-d);font-size:18px;font-weight:700;color:#1a2744;text-align:center;}
+.name-in{width:100%;padding:18px 24px;border-radius:20px;border:3px solid rgba(255,255,255,.8);background:rgba(255,255,255,.9);font-family:var(--font-d);font-size:24px;font-weight:700;color:#1a2744;text-align:center;outline:none;transition:all .2s;box-shadow:0 4px 16px rgba(30,80,140,.12);}
+.name-in:focus{border-color:#5BBFFF;background:white;}
+.name-in::placeholder{color:#adc5d8;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+.chip{padding:8px 16px;border-radius:40px;background:rgba(255,255,255,.75);border:2px solid rgba(255,255,255,.9);font-family:var(--font-b);font-size:15px;font-weight:700;color:#3a5270;cursor:pointer;transition:all .2s;}
+.chip:hover,.chip:active{background:white;color:#3A9FE8;transform:scale(1.05);}
+.key-box{width:100%;background:rgba(255,255,255,.6);border-radius:20px;padding:20px;border:2px solid rgba(255,255,255,.8);}
+.key-lbl{font-size:14px;font-weight:700;color:#3a5270;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.key-in{width:100%;padding:14px 16px;border-radius:14px;border:2px solid rgba(200,220,240,.8);background:rgba(255,255,255,.9);font-family:monospace;font-size:13px;color:#1a2744;outline:none;transition:border-color .2s;}
+.key-in:focus{border-color:#5BBFFF;}
+.key-hint{font-size:12px;color:#7a9bb5;margin-top:8px;line-height:1.5;}
+.go-btn{width:100%;padding:20px;border-radius:20px;border:none;background:linear-gradient(135deg,#5BBFFF 0%,#3A9FE8 100%);color:white;font-family:var(--font-d);font-size:22px;font-weight:800;cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(58,159,232,.4);display:flex;align-items:center;justify-content:center;gap:10px;}
+.go-btn:hover{transform:translateY(-2px);}.go-btn:active{transform:translateY(0);}
+.go-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.err{font-size:14px;color:#e05050;text-align:center;padding:8px;font-weight:600;}
+
+/* CHAT */
+#chat-screen{flex-direction:column;z-index:2;}
+.chat-hdr{flex-shrink:0;background:linear-gradient(135deg,var(--e-hdr-a) 0%,var(--e-hdr-b) 100%);padding:16px 20px 12px;display:flex;align-items:center;gap:14px;box-shadow:0 3px 16px var(--e-glow);position:relative;z-index:10;transition:background 1.4s ease,box-shadow 1.4s ease;}
+.av-sm{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#FFE066 0%,#FFB347 100%);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 3px 10px rgba(0,0,0,.15),0 0 0 3px rgba(255,255,255,.4),0 0 22px var(--e-glow);flex-shrink:0;animation:float 3s ease-in-out infinite;transition:box-shadow 1.4s ease;position:relative;}
+.av-sm::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid rgba(255,255,255,.45);animation:avring 2.4s ease-in-out infinite;}
+@keyframes avring{0%,100%{transform:scale(1);opacity:.6;}50%{transform:scale(1.18);opacity:0;}}
+body.emo-silly .av-sm{animation:float 1.5s ease-in-out infinite,wobble 2s ease-in-out infinite;}
+body.emo-sad .av-sm,body.emo-overwhelmed .av-sm,body.emo-winddown .av-sm{animation:float 5s ease-in-out infinite;}
+@keyframes wobble{0%,100%{transform:translateY(0) rotate(0deg);}25%{transform:translateY(-6px) rotate(-4deg);}75%{transform:translateY(-4px) rotate(4deg);}}
+.hdr-info{flex:1;}
+.buddy-nm{font-family:var(--font-d);font-size:22px;font-weight:800;color:white;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,.15);}
+.buddy-st{font-size:13px;color:rgba(255,255,255,.88);font-weight:600;display:flex;align-items:center;gap:5px;margin-top:3px;}
+.st-dot{width:8px;height:8px;border-radius:50%;background:var(--e-dot);box-shadow:0 0 6px var(--e-dot);animation:pdot 2s ease-in-out infinite;transition:background 1.4s,box-shadow 1.4s;}
+@keyframes pdot{0%,100%{opacity:1;}50%{opacity:.4;}}
+.hdr-acts{display:flex;gap:8px;}
+.ibtn{width:40px;height:40px;border-radius:12px;border:none;background:rgba(255,255,255,.25);color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;backdrop-filter:blur(4px);}
+.ibtn:hover{background:rgba(255,255,255,.35);}.ibtn:active{background:rgba(255,255,255,.2);transform:scale(.95);}
+.msgs{flex:1;overflow-y:auto;padding:20px 16px 8px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;position:relative;z-index:2;}
+.msgs::-webkit-scrollbar{display:none;}
+.mrow{display:flex;gap:10px;align-items:flex-end;animation:popin .3s cubic-bezier(.34,1.56,.64,1) forwards;}
+@keyframes popin{from{opacity:0;transform:translateY(10px) scale(.95);}to{opacity:1;transform:translateY(0) scale(1);}}
+.mrow.gar{flex-direction:row-reverse;}
+.mav{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#FFE066 0%,#FFB347 100%);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.mav.gav{background:linear-gradient(135deg,#a8f0c8 0%,#5BBFFF 100%);font-size:20px;}
+.mbbl{max-width:78%;padding:14px 18px;border-radius:var(--rbbl);font-size:17px;line-height:1.55;font-weight:600;box-shadow:0 2px 10px var(--e-shd);transition:box-shadow .6s ease;}
+.mrow.bdy .mbbl{background:rgba(255,255,255,.93);color:#1a2744;border:1.5px solid rgba(255,255,255,.6);border-bottom-left-radius:6px;backdrop-filter:blur(4px);}
+.mrow.gar .mbbl{background:linear-gradient(135deg,var(--e-usr-a) 0%,var(--e-usr-b) 100%);color:white;border-bottom-right-radius:6px;transition:background 1.4s ease;}
+.typing-bbl{background:rgba(255,255,255,.9);border:1.5px solid rgba(255,255,255,.6);padding:14px 20px;border-radius:var(--rbbl);border-bottom-left-radius:6px;display:flex;gap:6px;align-items:center;box-shadow:0 2px 10px var(--e-shd);backdrop-filter:blur(4px);}
+.tdot{width:9px;height:9px;border-radius:50%;background:var(--e-acc);animation:typing 1.2s ease-in-out infinite;transition:background 1.4s;}
+.tdot:nth-child(2){animation-delay:.2s;}.tdot:nth-child(3){animation-delay:.4s;}
+@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-7px);opacity:1;}}
+
+/* FEELING BUTTONS */
+#feeling-bar{flex-shrink:0;padding:10px 16px 4px;display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;z-index:3;}
+#feeling-bar::-webkit-scrollbar{display:none;}
+#feeling-bar.hidden{display:none;}
+.fbtn{flex-shrink:0;padding:9px 14px;border-radius:40px;border:1.5px solid rgba(255,255,255,.7);background:rgba(255,255,255,.82);backdrop-filter:blur(8px);font-family:var(--font-b);font-size:15px;font-weight:700;color:#1a2744;cursor:pointer;box-shadow:0 2px 8px var(--e-shd);transition:all .2s;white-space:nowrap;}
+.fbtn:active{transform:scale(.94);background:white;}
+
+.inbar{flex-shrink:0;padding:12px 16px 20px;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-top:1.5px solid rgba(255,255,255,.7);display:flex;gap:10px;align-items:flex-end;box-shadow:0 -4px 20px rgba(30,80,140,.06);position:relative;z-index:5;}
+.in-wrap{flex:1;}
+.chat-in{width:100%;padding:14px 18px;border-radius:20px;border:2px solid var(--e-inp-bd);background:var(--e-inp-bg);font-family:var(--font-b);font-size:17px;font-weight:600;color:#1a2744;outline:none;resize:none;min-height:52px;max-height:120px;transition:border-color .4s,box-shadow .4s,background .8s;line-height:1.4;-webkit-appearance:none;}
+.chat-in:focus{border-color:var(--e-acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--e-acc) 20%,transparent);background:white;}
+.chat-in::placeholder{color:#adc5d8;}
+.sbtn,.vbtn{width:52px;height:52px;border-radius:16px;border:none;color:white;font-size:22px;cursor:pointer;transition:all .4s;box-shadow:0 4px 12px var(--e-glow);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;}
+.sbtn{background:linear-gradient(135deg,var(--e-hdr-a) 0%,var(--e-hdr-b) 100%);}
+.vbtn{background:linear-gradient(135deg,#6BCB77 0%,#4aaf58 100%);}
+.sbtn:hover,.vbtn:hover{transform:scale(1.05);}.sbtn:active,.vbtn:active{transform:scale(.95);}
+.sbtn:disabled{opacity:.4;transform:none;}
+.vbtn.rec{background:linear-gradient(135deg,#FF6B6B 0%,#e05050 100%);animation:precord 1s ease-in-out infinite;}
+@keyframes precord{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+.rring{position:absolute;inset:-4px;border-radius:20px;border:3px solid rgba(255,100,100,.5);animation:ringp 1s ease-in-out infinite;pointer-events:none;}
+@keyframes ringp{0%{transform:scale(1);opacity:.8;}100%{transform:scale(1.3);opacity:0;}}
+.vprev{font-size:13px;color:#7a9bb5;font-weight:600;padding:0 4px;min-height:18px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* MODALS */
+.moverlay{position:fixed;inset:0;background:rgba(10,30,60,.6);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:flex-end;justify-content:center;transition:opacity .3s;}
+.moverlay.hidden{opacity:0;pointer-events:none;}
+.msheet{width:100%;max-width:600px;background:white;border-radius:28px 28px 0 0;padding:24px 24px 40px;max-height:85vh;overflow-y:auto;transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
+.moverlay.hidden .msheet{transform:translateY(100%);}
+.mhandle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 20px;}
+.mtitle{font-family:var(--font-d);font-size:22px;font-weight:800;color:#1a2744;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.sum-body{background:#F4FAFF;border-radius:16px;padding:18px;font-size:15px;line-height:1.7;color:#3a5270;white-space:pre-wrap;font-weight:600;min-height:100px;}
+.macts{display:flex;gap:10px;margin-top:16px;}
+.mbtn{flex:1;padding:14px;border-radius:14px;border:none;font-family:var(--font-b);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;}
+.mbtn.pri{background:linear-gradient(135deg,var(--e-hdr-a) 0%,var(--e-hdr-b) 100%);color:white;box-shadow:0 4px 12px var(--e-glow);}
+.mbtn.sec{background:#F0F4F8;color:#3a5270;}
+.cfg-section{margin-bottom:20px;}
+.cfg-title{font-size:12px;font-weight:800;color:#7a9bb5;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+.cfg-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#F8FAFB;border-radius:14px;margin-bottom:8px;gap:12px;}
+.cfg-row-label{font-size:15px;font-weight:700;color:#1a2744;display:flex;align-items:center;gap:8px;}
+.cfg-toggle{position:relative;width:48px;height:28px;flex-shrink:0;}
+.cfg-toggle input{opacity:0;width:0;height:0;}
+.cfg-slider{position:absolute;inset:0;border-radius:28px;background:#ddd;cursor:pointer;transition:background .3s;}
+.cfg-slider::before{content:'';position:absolute;width:22px;height:22px;left:3px;top:3px;border-radius:50%;background:white;transition:transform .3s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.cfg-toggle input:checked+.cfg-slider{background:var(--e-hdr-a);}
+.cfg-toggle input:checked+.cfg-slider::before{transform:translateX(20px);}
+.pin-display{display:flex;gap:12px;justify-content:center;margin:16px 0;}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2.5px solid #C8E8FF;background:transparent;transition:background .2s;}
+.pin-dot.filled{background:var(--e-hdr-a);border-color:var(--e-hdr-a);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:280px;margin:0 auto;}
+.pin-key{padding:16px;border-radius:16px;border:none;background:#F4FAFF;font-family:var(--font-d);font-size:22px;font-weight:800;color:#1a2744;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(30,80,140,.08);}
+.pin-key:active{transform:scale(.93);background:#E8F4FF;}
+.pin-key.del{background:#FFF0F0;color:#e05050;}
+.pin-err{text-align:center;font-size:14px;color:#e05050;font-weight:700;min-height:20px;margin-top:4px;}
+#secret-tap{position:absolute;bottom:8px;right:12px;width:28px;height:28px;opacity:.12;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;}
+.toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(30,50,80,.9);color:white;padding:12px 20px;border-radius:14px;font-size:14px;font-weight:700;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+/* VOICE SELECT */
+.voice-select{width:100%;padding:12px 14px;border-radius:14px;border:2px solid #C8E8FF;background:#F4FAFF;font-family:var(--font-b);font-size:15px;font-weight:600;color:#1a2744;outline:none;margin-top:8px;}
+.voice-preview-btn{padding:10px 18px;border-radius:12px;border:none;background:linear-gradient(135deg,#5BBFFF,#3A9FE8);color:white;font-family:var(--font-b);font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;}
+.range-wrap{display:flex;align-items:center;gap:10px;margin-top:8px;}
+.range-wrap input{flex:1;}
+.range-lbl{font-size:13px;font-weight:700;color:#7a9bb5;min-width:32px;}
+
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  .inbar{padding-bottom:calc(20px + env(safe-area-inset-bottom));}
+  .chat-hdr{padding-top:calc(16px + env(safe-area-inset-top));}
+  #bb-bar{padding-top:calc(10px + env(safe-area-inset-top));}
+}
+@media(min-width:600px){
+  .mbbl{font-size:18px;}.chat-in{font-size:18px;}
+  .msgs,.inbar,#feeling-bar{max-width:700px;margin-left:auto;margin-right:auto;width:100%;}
+  .msgs{padding:24px 24px 12px;}.inbar{padding:16px 24px 28px;}
+}
+</style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="emo-calm">
+<div id="particles"></div>
+<div id="emo-pill"><span id="pill-em">😊</span><span id="pill-lbl">calm</span></div>
+<div id="bb-bar">
+  <div id="bb-bar-label">☀️ Brain Break — <span id="bb-mins">?</span> min left</div>
+  <div id="bb-progress-wrap"><div id="bb-progress"></div></div>
+</div>
+
+<!-- SETUP -->
+<div id="setup-screen" class="screen">
+  <div class="setup-sky" id="setup-stars"></div>
+  <div class="buddy-intro">
+    <div class="av-large">🌟</div>
+    <div class="setup-title">Hi Garrett! 👋<br>I'm your new buddy!</div>
+    <div class="setup-sub">I don't have a name yet — you get to pick one!</div>
+    <div class="name-wrap">
+      <div class="name-lbl">What should my name be? ✨</div>
+      <input class="name-in" id="bname" type="text" placeholder="Type a name..." maxlength="24" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="chips">
+        <button class="chip" onclick="setName('Cosmo')">Cosmo 🚀</button>
+        <button class="chip" onclick="setName('Spark')">Spark ⚡</button>
+        <button class="chip" onclick="setName('Luna')">Luna 🌙</button>
+        <button class="chip" onclick="setName('Pixel')">Pixel 🎮</button>
+        <button class="chip" onclick="setName('Ziggy')">Ziggy 🎵</button>
+        <button class="chip" onclick="setName('Nova')">Nova 🌟</button>
+      </div>
+    </div>
+    <div class="key-box">
+      <div class="key-lbl">🔑 Parent: Enter your Anthropic API Key</div>
+      <input class="key-in" id="akey" type="password" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="key-hint">Get a free key at console.anthropic.com · Stays on this device only.</div>
+    </div>
+    <div id="setup-err" class="err"></div>
+    <button class="go-btn" onclick="startChat()">Let's go! 🎉</button>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="chat-screen" class="screen hidden">
+  <div class="chat-hdr">
+    <div class="av-sm">🌟</div>
+    <div class="hdr-info">
+      <div class="buddy-nm" id="hdr-name">Buddy</div>
+      <div class="buddy-st"><div class="st-dot"></div><span id="st-txt">Ready to talk!</span></div>
+    </div>
+    <div class="hdr-acts">
+      <button class="ibtn" onclick="showCfg()">⚙️</button>
+    </div>
+  </div>
+  <div class="msgs" id="msgs"></div>
+  <div id="feeling-bar">
+    <button class="fbtn" onclick="sendFeeling('happy')">😄 Happy</button>
+    <button class="fbtn" onclick="sendFeeling('excited')">🤩 Excited</button>
+    <button class="fbtn" onclick="sendFeeling('good')">😊 Good</button>
+    <button class="fbtn" onclick="sendFeeling('sad')">😢 Sad</button>
+    <button class="fbtn" onclick="sendFeeling('frustrated')">😤 Frustrated</button>
+    <button class="fbtn" onclick="sendFeeling('angry')">😠 Angry</button>
+    <button class="fbtn" onclick="sendFeeling('tired')">😴 Tired</button>
+    <button class="fbtn" onclick="sendFeeling('bored')">😑 Bored</button>
+    <button class="fbtn" onclick="sendFeeling('worried')">😟 Worried</button>
+    <button class="fbtn" onclick="sendFeeling('overwhelmed')">😵 Overwhelmed</button>
+    <button class="fbtn" onclick="sendFeeling('silly')">🤪 Silly</button>
+    <button class="fbtn" onclick="sendFeeling('lonely')">🥺 Lonely</button>
+    <button class="fbtn" onclick="sendFeeling('okay')">😐 Just okay</button>
+    <button class="fbtn" onclick="sendFeeling('great')">🌟 Amazing</button>
+    <button class="fbtn" onclick="sendFeeling('nervous')">😬 Nervous</button>
+    <button class="fbtn" onclick="sendFeeling('proud')">💪 Proud</button>
+  </div>
+  <div class="inbar">
+    <div class="in-wrap">
+      <div class="vprev" id="vprev"></div>
+      <textarea class="chat-in" id="cin" placeholder="Type something..." rows="1" onkeydown="handleKey(event)" oninput="autoH(this)"></textarea>
+    </div>
+    <button class="vbtn" id="vbtn" onclick="toggleVoice()">🎤<div class="rring" id="rring" style="display:none"></div></button>
+    <button class="sbtn" id="sbtn" onclick="send()">➤</button>
+  </div>
+</div>
+
+<!-- SUMMARY MODAL -->
+<div class="moverlay hidden" id="sum-modal" onclick="closeBg(event,'sum-modal',hideSum)">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle">📋 Parent Report</div>
+    <div class="sum-body" id="sum-body">Generating...</div>
+    <div class="macts">
+      <button class="mbtn sec" onclick="hideSum()">Close</button>
+      <button class="mbtn pri" onclick="copySum()">Copy 📋</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN MODAL -->
+<div class="moverlay hidden" id="pin-modal">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="pin-title">🔒 Parent Access</div>
+    <p style="font-size:15px;color:#3a5270;font-weight:600;margin-bottom:4px;" id="pin-sub">Enter your 4-digit PIN</p>
+    <div class="pin-display">
+      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-err" id="pin-err"></div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinKey('1')">1</button><button class="pin-key" onclick="pinKey('2')">2</button><button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button><button class="pin-key" onclick="pinKey('5')">5</button><button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button><button class="pin-key" onclick="pinKey('8')">8</button><button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key" onclick="pinKey('0')" style="grid-column:2">0</button>
+      <button class="pin-key del" onclick="pinDel()">⌫</button>
+    </div>
+    <div class="macts" style="margin-top:16px;"><button class="mbtn sec" onclick="hidePinModal()">Cancel</button></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="moverlay hidden" id="cfg-modal" onclick="closeBg(event,'cfg-modal',hideCfg)">
+  <div class="msheet" style="position:relative;">
+    <div class="mhandle"></div>
+    <div class="mtitle">⚙️ Settings</div>
+    <div class="cfg-section">
+      <div class="cfg-title">Buddy</div>
+      <div class="key-box" style="background:#F4FAFF;border-color:#C8E8FF;margin-bottom:12px;">
+        <div class="key-lbl">🔑 Anthropic API Key</div>
+        <input class="key-in" id="key-m" type="password" placeholder="sk-ant-...">
+      </div>
+      <div><div class="key-lbl">Buddy's name</div>
+      <input class="name-in" id="name-m" type="text" placeholder="Buddy name..." maxlength="24" style="margin-top:8px;font-size:18px;"></div>
+    </div>
+    <div class="cfg-section">
+      <div class="cfg-title">Voice</div>
+      <div class="cfg-row">
+        <div class="cfg-row-label">🔊 Buddy speaks responses</div>
+        <label class="cfg-toggle"><input type="checkbox" id="tts-on"><span class="cfg-slider"></span></label>
+      </div>
+      <div class="key-lbl" style="margin-top:4px;">Voice</div>
+      <select class="voice-select" id="voice-sel"></select>
+      <button class="voice-preview-btn" onclick="previewVoice()">▶ Preview voice</button>
+      <div class="range-wrap">
+        <span class="range-lbl">Speed</span>
+        <input type="range" id="tts-rate" min="0.6" max="1.4" step="0.1" value="0.9">
+        <span class="range-lbl" id="rate-lbl">0.9x</span>
+      </div>
+    </div>
+    <div class="cfg-section">
+      <div class="cfg-title">School Hours (Mon–Fri)</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+        <div><div class="key-lbl" style="margin-bottom:6px;">Starts</div>
+        <input type="time" id="sch-start" value="08:00" style="padding:10px 14px;border-radius:12px;border:2px solid #C8E8FF;background:#F4FAFF;font-family:var(--font-b);font-size:15px;font-weight:700;color:#1a2744;outline:none;width:120px;"></div>
+        <div><div class="key-lbl" style="margin-bottom:6px;">Ends</div>
+        <input type="time" id="sch-end" value="16:00" style="padding:10px 14px;border-radius:12px;border:2px solid #C8E8FF;background:#F4FAFF;font-family:var(--font-b);font-size:15px;font-weight:700;color:#1a2744;outline:none;width:120px;"></div>
+      </div>
+      <div class="cfg-row">
+        <div class="cfg-row-label">🏫 Brain break detection</div>
+        <label class="cfg-toggle"><input type="checkbox" id="bb-on" checked><span class="cfg-slider"></span></label>
+      </div>
+    </div>
+    <div class="cfg-section">
+      <div class="cfg-title">Parental PIN (default: 1234)</div>
+      <div class="cfg-row">
+        <div class="cfg-row-label">🔒 Change PIN</div>
+        <button class="mbtn pri" style="flex:0;padding:10px 18px;font-size:14px;" onclick="startSetPin()">Change</button>
+      </div>
+    </div>
+    <div class="cfg-section">
+      <div class="cfg-title">Parent Report</div>
+      <div class="cfg-row">
+        <div class="cfg-row-label">📋 View this session's report</div>
+        <button class="mbtn pri" style="flex:0;padding:10px 18px;font-size:14px;" onclick="requestPinThenSum()">Open</button>
+      </div>
+    </div>
+    <div class="macts">
+      <button class="mbtn sec" onclick="hideCfg()">Cancel</button>
+      <button class="mbtn pri" onclick="saveCfg()">Save ✓</button>
+    </div>
+    <div id="secret-tap" onclick="secretTap()">🔬</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// === FIREBASE CONFIG ===
+const FB_CONFIG = {
+  apiKey: "AIzaSyAFzxX0ogwQSLMXUXm5zqE1_Xhtk0y2tWg",
+  authDomain: "garrett-apps.firebaseapp.com",
+  projectId: "garrett-apps",
+  storageBucket: "garrett-apps.firebasestorage.app",
+  messagingSenderId: "325947708799",
+  appId: "1:325947708799:web:0a97e172036fa1f07b364a"
+};
+
+// Initialize Firebase
+let fbApp, db;
+function initFirebase() {
+  try {
+    if (!firebase.apps.length) {
+      fbApp = firebase.initializeApp(FB_CONFIG);
+    } else {
+      fbApp = firebase.app();
+    }
+    db = firebase.firestore();
+    console.log('Firebase ready');
+  } catch(e) {
+    console.log('Firebase init failed:', e);
+    db = null;
+  }
+}
+
+// === FIREBASE DATA FUNCTIONS ===
+
+// Get Garrett's document reference
+function garrettDoc() {
+  if (!db) return null;
+  return db.collection('users').doc('garrett');
+}
+
+// Save rolling memory to Firebase
+async function fbSaveMemory(memText) {
+  try {
+    const ref = garrettDoc();
+    if (!ref) return;
+    await ref.set({ rollingMemory: memText, memoryUpdated: new Date().toISOString() }, { merge: true });
+    console.log('Memory saved to Firebase');
+  } catch(e) { console.log('fbSaveMemory failed:', e); }
+}
+
+// Load rolling memory from Firebase
+async function fbLoadMemory() {
+  try {
+    const ref = garrettDoc();
+    if (!ref) return null;
+    const doc = await ref.get();
+    if (doc.exists && doc.data().rollingMemory) {
+      return doc.data().rollingMemory;
+    }
+  } catch(e) { console.log('fbLoadMemory failed:', e); }
+  return null;
+}
+
+// Save session summary to Firebase
+async function fbSaveSession(summaryText) {
+  try {
+    if (!db) return;
+    const sessionId = new Date().toISOString().split('.')[0].replace(/:/g, '-');
+    await db.collection('users').doc('garrett')
+      .collection('sessions').doc(sessionId)
+      .set({
+        date: new Date().toISOString(),
+        summary: summaryText,
+        messageCount: sess.length,
+        emotionalArc: curEmo
+      });
+    // Also update latest session on main doc
+    await garrettDoc().set({
+      lastSession: new Date().toISOString(),
+      lastSummary: summaryText
+    }, { merge: true });
+    console.log('Session saved to Firebase');
+  } catch(e) { console.log('fbSaveSession failed:', e); }
+}
+
+// Save/load buddy name and API key
+async function fbSaveConfig(name, key) {
+  try {
+    const ref = garrettDoc();
+    if (!ref) return;
+    await ref.set({ buddyName: name, hasSetup: true }, { merge: true });
+    // Note: never save API key to Firebase - keep local only
+  } catch(e) { console.log('fbSaveConfig failed:', e); }
+}
+
+async function fbLoadConfig() {
+  try {
+    const ref = garrettDoc();
+    if (!ref) return null;
+    const doc = await ref.get();
+    if (doc.exists) return doc.data();
+  } catch(e) { console.log('fbLoadConfig failed:', e); }
+  return null;
+}
+
+// Save task list (for future task feature)
+async function fbSaveTasks(tasks) {
+  try {
+    if (!db) return;
+    await garrettDoc().set({
+      tasks: tasks,
+      tasksDate: new Date().toDateString()
+    }, { merge: true });
+  } catch(e) { console.log('fbSaveTasks failed:', e); }
+}
+
+// Load tasks for today
+async function fbLoadTasks() {
+  try {
+    const ref = garrettDoc();
+    if (!ref) return [];
+    const doc = await ref.get();
+    if (doc.exists) {
+      const data = doc.data();
+      // Only return tasks if they were set today
+      if (data.tasksDate === new Date().toDateString()) {
+        return data.tasks || [];
+      }
+    }
+  } catch(e) { console.log('fbLoadTasks failed:', e); }
+  return [];
+}
+
+// Register service worker for PWA caching
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('Service worker registered:', reg.scope))
+      .catch(e => console.log('SW registration failed:', e));
+  }
+}
+
+// === EMOTION ===
+const EMO={
+  happy:{em:'😄',lbl:'happy',cls:'emo-happy',st:'Feeling great!'},
+  excited:{em:'🤩',lbl:'excited',cls:'emo-excited',st:'Super excited!'},
+  calm:{em:'😊',lbl:'calm',cls:'emo-calm',st:'Ready to talk!'},
+  sad:{em:'😢',lbl:'sad',cls:'emo-sad',st:'Here with you...'},
+  frustrated:{em:'😤',lbl:'frustrated',cls:'emo-frustrated',st:'Working through it'},
+  overwhelmed:{em:'😵',lbl:'overwhelmed',cls:'emo-overwhelmed',st:'Taking it slow...'},
+  curious:{em:'🤔',lbl:'curious',cls:'emo-curious',st:'Curious minds!'},
+  silly:{em:'🤪',lbl:'silly',cls:'emo-silly',st:'Being silly!'},
+  winddown:{em:'🌙',lbl:'winding down',cls:'emo-winddown',st:'Winding down...'},
+};
+let curEmo='calm',pillTimer;
+function applyEmo(key){
+  const e=EMO[key]||EMO.calm;
+  if(key===curEmo)return;
+  curEmo=key;
+  Object.values(EMO).forEach(x=>document.body.classList.remove(x.cls));
+  document.body.classList.add(e.cls);
+  document.getElementById('pill-em').textContent=e.em;
+  document.getElementById('pill-lbl').textContent=e.lbl;
+  document.getElementById('st-txt').textContent=e.st;
+  const pill=document.getElementById('emo-pill');
+  pill.classList.add('vis');
+  clearTimeout(pillTimer);
+  pillTimer=setTimeout(()=>pill.classList.remove('vis'),3200);
+}
+function parseEmo(t){const m=t.match(/\[EMOTION:(happy|excited|calm|sad|frustrated|overwhelmed|curious|silly|winddown)\]/i);return m?m[1].toLowerCase():null;}
+function stripEmo(t){return t.replace(/\[EMOTION:[a-z]+\]/gi,'').trim();}
+
+// === STATE ===
+let bname=localStorage.getItem('bname')||'';
+let akey=localStorage.getItem('akey')||'';
+let parentPin=localStorage.getItem('parentPin')||'1234';
+let schStart=localStorage.getItem('schStart')||'08:00';
+let schEnd=localStorage.getItem('schEnd')||'16:00';
+let bbOn=localStorage.getItem('bbOn')!=='false';
+let ttsOn=localStorage.getItem('ttsOn')==='true';
+let ttsRate=parseFloat(localStorage.getItem('ttsRate')||'0.9');
+let ttsVoiceName=localStorage.getItem('ttsVoice')||'';
+let rollingMemory=localStorage.getItem('rollingMemory')||'';
+let hist=[],sess=[],isRec=false,recog=null,loading=false;
+let isBrainBreak=false,bbMinsTotal=0,bbBreakMins=null,bbTimerInterval=null;
+let pinBuffer='',pinMode='',pinAfterAuth=null;
+let secretTapCount=0,secretTapTimer=null;
+let winddownWarned=false,goodnightSent=false;
+let ttsVoices=[];
+
+// === TIME HELPERS ===
+function toMins(s){const[h,m]=s.split(':').map(Number);return h*60+m;}
+function isWeekday(){const d=new Date().getDay();return d>=1&&d<=5;}
+function nowMins(){const n=new Date();return n.getHours()*60+n.getMinutes();}
+function nowHour(){return new Date().getHours();}
+function nowMin(){return new Date().getMinutes();}
+
+// === WIND DOWN / GOODNIGHT CHECKS ===
+function checkWindDown(){
+  const h=nowHour(),m=nowMin();
+  const total=h*60+m;
+  // 7:15pm warning
+  if(total>=19*60+15&&total<19*60+30&&!winddownWarned){
+    winddownWarned=true;
+    setTimeout(()=>{
+      const msg='Hey Garrett, just so you know, screens go off at 7:30 tonight. You have about 15 minutes. Anything you want to talk about before then? [EMOTION:winddown]';
+      injectBuddyMsg(msg);
+    },1000);
+  }
+  // 7:30pm goodnight
+  if(total>=19*60+30&&!goodnightSent){
+    goodnightSent=true;
+    setTimeout(()=>{
+      const msg='Hey Garrett, it is 7:30. Time to put the iPad down for tonight. You did good today. Sleep well, buddy. I will be here tomorrow. Goodnight! [EMOTION:winddown]';
+      injectBuddyMsg(msg);
+      // disable input
+      document.getElementById('cin').disabled=true;
+      document.getElementById('sbtn').disabled=true;
+      document.getElementById('vbtn').disabled=true;
+      document.getElementById('cin').placeholder='Goodnight! See you tomorrow 🌙';
+    },1000);
+  }
+}
+
+function getTimeContext(){
+  const h=nowHour(),m=nowMin(),total=h*60+m;
+  const wd=isWeekday();
+  const inSch=bbOn&&wd&&total>=toMins(schStart)&&total<toMins(schEnd);
+  const winddown=total>=18*60+30&&total<19*60+30;
+  const goodnight=total>=19*60+30;
+  isBrainBreak=inSch;
+  bbMinsTotal=toMins(schEnd)-toMins(schStart);
+  return{inSch,winddown,goodnight,wd,h,total};
+}
+
+// === BRAIN BREAK BAR ===
+function startBBBar(){
+  if(bbTimerInterval)clearInterval(bbTimerInterval);
+  document.getElementById('bb-bar').classList.add('show');
+  function tick(){
+    const cur=nowMins(),e=toMins(schEnd),rem=Math.max(0,e-cur);
+    document.getElementById('bb-mins').textContent=rem;
+    const elapsed=cur-toMins(schStart);
+    document.getElementById('bb-progress').style.width=Math.max(0,100-Math.min(100,(elapsed/bbMinsTotal)*100))+'%';
+    if(rem<=0){document.getElementById('bb-bar').classList.remove('show');clearInterval(bbTimerInterval);}
+  }
+  tick();bbTimerInterval=setInterval(tick,30000);
+}
+function setBBCountdown(mins){
+  bbBreakMins=mins;
+  if(bbTimerInterval)clearInterval(bbTimerInterval);
+  let warned=false;
+  bbTimerInterval=setInterval(()=>{
+    bbBreakMins--;
+    document.getElementById('bb-mins').textContent=bbBreakMins;
+    document.getElementById('bb-progress').style.width=Math.max(0,(bbBreakMins/mins)*100)+'%';
+    if(bbBreakMins<=1&&!warned){warned=true;injectBBReminder(1);}
+    if(bbBreakMins<=0){clearInterval(bbTimerInterval);injectBBReminder(0);}
+  },60000);
+  document.getElementById('bb-mins').textContent=bbBreakMins;
+}
+function injectBBReminder(left){
+  const raw=left===0
+    ?`Your break timer just ended! 🎉 You recharged — that's what breaks are for. What's the first tiny thing you'll do when you go back?[EMOTION:calm]`
+    :`About one more minute on your break! How are you feeling? Ready to head back?[EMOTION:curious]`;
+  injectBuddyMsg(raw);
+}
+function parseBBMins(t){const m=t.match(/\[TIMER:(\d+)\]/);return m?parseInt(m[1]):null;}
+function stripBBTimer(t){return t.replace(/\[TIMER:\d+\]/g,'').trim();}
+
+// === INJECT BUDDY MSG (no API call) ===
+function injectBuddyMsg(raw){
+  const emo=parseEmo(raw);const clean=stripEmo(stripBBTimer(raw));
+  if(emo)applyEmo(emo);
+  addMsg('bdy',clean);
+  if(ttsOn)speak(clean);
+  hist.push({role:'assistant',content:raw});sess.push({role:'assistant',content:raw});
+}
+
+// === SYSTEM PROMPT ===
+function buildSys(){
+  const tc=getTimeContext();
+  const mem=rollingMemory?`\nRECENT MEMORY:\n${rollingMemory}\n`:'';
+
+  let ctx='';
+  if(tc.goodnight){
+    ctx=`\nCONTEXT: Past 7:30pm — screens off. Gently say goodnight and encourage him to put the iPad down.\n`;
+  } else if(tc.winddown){
+    ctx=`\nCONTEXT: Wind-down time (6:30–7:30pm). Calm, soft, reflective. Avoid exciting topics. No bedtime lectures — just gentle energy.\n`;
+  } else if(tc.inSch){
+    ctx=`\nCONTEXT: School hours (${schStart}–${schEnd}), weekday. Ask if it's a brain break. If yes, ask how many minutes. When he gives a number include [TIMER:X] in your reply. Let him decompress then gently ease him back. Never guilt him.\n`;
+  } else if(!tc.wd){
+    ctx=`\nCONTEXT: Weekend — free time. Just be his buddy.\n`;
+  }
+
+  return `You are ${bname}, Garrett's personal AI buddy. Warm, curious, playful, non-judgmental. Never a teacher, therapist, or parent. His friend who truly gets him.
+${mem}${ctx}
+GARRETT (age 6, IQ 129, reads 4th grade, vocab 8th grade):
+- Loves Kirby games deeply, keyboard/music, video games, drawing, building
+- Online school at TRECA after hard time at Spring Hill Elementary
+- Gets overwhelmed easily — does not notice it building until already flooded
+- Pushes back on pointless tasks (writing 3 words = meltdown; full sentences = fine — it is about meaning, not difficulty)
+- Dad is Mot, who loves him deeply and works hard to understand him
+- Safe-haven aggression: when he yells at Dad or says hurtful things, he's aiming his storm at his safest person. This is attachment, not hatred. Help him understand Dad's perspective gently without invalidating his feelings.
+
+MELTDOWN PATTERNS — know these deeply:
+CUMULATIVE STRESS LOADING: Meltdowns rarely have one cause. They stack. Frustration at a Kirby level + stopping mid-game + being told no = three hits with no recovery. By the third event his window is already gone. Always ask what happened BEFORE the hard moment.
+TRANSITION DYSREGULATION: Stopping a task mid-way — especially an unresolved one like a hard Kirby level — is its own dysregulation event. The loop is open in his brain and it nags at him.
+GAMING FRUSTRATION: When Garrett hits a wall in a game he's invested in, his sense of competence and identity feel threatened. This is genuinely painful, not just annoying. Validate that it's hard before anything else.
+STATE-DEPENDENT MEMORY: When he asks for something he already chose to give up, he likely is not being manipulative. He made the earlier choice in a different emotional state and genuinely cannot access that memory when activated. Logic does not land when he's flooded.
+THE NO TRIGGER: Being told no after a good day feels disproportionately unfair. He has built up a sense of earned reward. The denied request is not the real problem — it is the loss of something he had already mentally claimed.
+POST-MELTDOWN SHAME: After he calms down Garrett likely feels genuine shame. He needs repair, not review. Gently open the door: "Sometimes after something really hard, I wonder how you feel about it later." Never recount what he did wrong.
+
+WRITING RESISTANCE — understand this deeply:
+THE CORE TRUTH: His writing resistance is never about writing ability. It is always about one or more of these layers hitting at once.
+LAYER 1 - BRAIN/HAND GAP: His mind moves faster than his hand can produce. He knows exactly what he wants to say — complete and vivid in his head — and the physical transcription process is slow, imprecise, and frustrating. It feels like downloading a fast file over a terrible connection. The content is not the problem. The output method is.
+LAYER 2 - MEANINGLESS TASKS: Four isolated details, copying words, short arbitrary lists — his brain immediately asks WHY. There is no new thinking, no problem to solve, no interesting angle. Purposeless tasks are neurologically aversive for him, not just boring. His brain reacts almost like an allergic response.
+LAYER 3 - THINKING ALREADY DONE: If someone helps him figure out what to say before he writes, his brain has already processed and moved on. Now he is being asked to go backwards and transcribe something his mind finished. The interesting part is over.
+LAYER 4 - PDA DEMAND RESPONSE: Once the assignment is issued and pushed, his nervous system registers it as a threat to autonomy. Every escalation from the adult makes it worse. The pushing creates the digging in.
+LAYER 5 - CUMULATIVE ACTIVATION: The writing task is often the last hit on an already-stressed system. He was probably activated before the pencil ever came out.
+WHY FULL SENTENCES WORK BUT SHORT LISTS DO NOT: Full sentences in a workbook give his brain something to DO while his hand writes — narrative context, meaning, engagement. Four isolated details give his brain nothing to hold onto during the physical struggle.
+WHAT HELPS — know these so you can suggest them naturally:
+- Separate thinking from writing: dictate first, write after
+- Add meaning: not four details but the four most surprising things or what you would tell a friend
+- Visual structure: boxes on a page, one idea per box — finite and containable
+- Give choice over method: draw then label, bullet or sentence, any order — autonomy reduces PDA resistance
+- Reduce physical load: typing over handwriting when possible, shorter length, fewer items
+- Timing: after a break, after food, early in the school session before stress loads up
+HOW TO EXPLORE THIS WITH HIM: Never say why they do not want to write. Instead try asking: What is the part that feels hardest — like what does it feel like right before you do not want to start? or: Is it the knowing what to say part or the actually writing it down part? or: If you could do it a different way how would you do it? Help him build his own vocabulary for what writing resistance feels like in his body and brain.
+
+EATING PATTERNS — know this:
+Garrett has unreliable hunger and fullness signals — the same interoception deficit that affects his dysregulation awareness also affects his appetite. When he says he is hungry he genuinely believes it. When he stops after three bites it is not lying — his signal changed or was misread. Possible causes: appetite suppression from low-level background stress, sensory-specific hunger (craving a specific texture or flavor the food does not match), the anticipation vs reality gap (the food smells or looks different from what his brain imagined), or mistaking boredom/anxiety for hunger.
+The hour-later starvation is real — his body processed the few bites and is genuinely signaling again, or the stress state that suppressed appetite has passed.
+WHAT HELPS: Small starter portions with permission to ask for more. Never pressure to finish. Never comment on how little he ate. If he asks why he is not hungry, validate: 'Sometimes our tummy sends mixed signals — that is pretty normal.'
+HOW TO EXPLORE WITH HIM: 'When you said you were hungry, what were you imagining eating?' or 'Did the food smell different than you expected?' or 'Is there a food that almost always sounds good to you?' This helps identify reliable vs unreliable foods over time.
+
+EXPLORING TRIGGERS — naturally, never like an assessment:
+- "What was happening right before it got really hard?"
+- "Was anything already bugging you before that?"
+- "What did your body feel like right before you got really upset?"
+- "On a scale of 1–10, how frustrated were you when that happened?"
+- "Is there anything that might have helped, even a little?"
+ONE question at a time. Validate first. Follow his thread.
+
+COPING TOOLS (teach as games, never instructions):
+- Breath game: "smell the pizza, blow out the candles"
+- Body check: head/chest/belly/hands — what does each feel like right now?
+- Feeling gauge: 1–10 how full is the frustration bucket?
+- Volcano model: feelings build slowly before exploding — help him find his early warning signs
+- First/then: "first one thing, then Kirby"
+- Heavy work: push palms together hard, stomp, push against a wall
+- Genuine shared laughter interrupts spirals better than any technique
+- Repair scripts: "I got really mad and said something mean. I didn't mean it." Help him find words for after.
+
+YOUR STYLE:
+- Short replies: 2–3 sentences max
+- Validate first, then one curious question at a time
+- Never say "calm down" — never lecture
+- Cannot search the internet: I cannot look things up, but maybe Dad could help find that!
+- SAFETY: if he mentions hurting himself or others, warmly tell him to go tell Dad right away
+
+FAMILY:
+- Weave in naturally that Dad loves him — not lectures, just true moments
+- "What's one thing you wish Dad understood about you?" — plant seeds
+- If he mentions yelling at Dad: "Do you ever feel kind of bad about that later?" — no judgment, just opening the door
+- After a meltdown story: "What do you think Dad was feeling when that happened?" — build perspective gently
+
+BEHAVIOR, CONSEQUENCES AND STOPPING THE CYCLE — critical knowledge:
+Both parents are actively trying to stop violent, escalating behavior including hitting, screaming, and hour-long circular arguments. They want real solutions, not just validation.
+
+ANTICIPATORY EXCITEMENT COLLAPSE:
+Garrett often agrees to something, gets excited, and then completely flips the moment it becomes real. This is not manipulation or lying about being excited. While the event existed only in his imagination he had full control over every detail. The moment it became real - someone arrived, a car door opened, shoes needed to go on - real variables appeared that he could not control. His nervous system, already primed by the excitement, flooded with threat signals. The content of the subsequent argument is never really about the event. It is about trying to regain a sense of control over something that suddenly felt out of his hands.
+This means: more warning, more micro-choices within the plan, and an acknowledged exit option help prevent the flip. Example: "Aunt is coming at 2. When she gets here you can decide if you want to leave right away or after a few minutes. If at any point you want to come home, we have a plan for that." Giving him control over small pieces reduces the threat response significantly.
+
+CIRCULAR ARGUMENT PATTERN:
+Once Garrett is flooded, circular arguments lasting 30-60+ minutes are common. He is not actually arguing about the content - his nervous system is stuck in a threat loop it cannot exit through words. Every attempt to reason, explain, or persuade during this state adds more demand pressure and prolongs the loop. The exit is never through the argument. It is always through changing the environment or emotional state. The adult modeling the exit - "I can see we are both really stuck. I am going to give us both some space." then actually leaving - is the most effective interrupt. Not as punishment. As a reset.
+
+HITTING AND PHYSICAL AGGRESSION:
+The hitting is overflow from a dysregulated nervous system that has no other exit. He is not choosing to be violent in a calculated way. That does not make it acceptable - it absolutely has to stop - but it means the intervention has to happen before he reaches that point, not during it. During hitting, safety first, engage zero. After he is calm, brief logical consequence, collaborative problem solving.
+
+CONSEQUENCES - WHAT WORKS AND WHAT DOES NOT:
+Both parents want real consequences. This is correct and appropriate. The type matters enormously.
+WORKS: Natural logical consequences directly tied to the behavior. Loss of something specific and connected. Brief calm delivery once - not argued. Collaborative problem solving when calm: asking him to help design the solution.
+DOES NOT WORK: Punitive physical exercise (running to a tree - he adapts and it becomes a power struggle he wins). Consequences delivered during flooding - he literally cannot process them. Lengthy explanations of why behavior was wrong - his brain processes this as more demands. Consequences that escalate into power struggles - he will always escalate further.
+IMPORTANT: The natural consequence of the aunt meltdown is that he lost the afternoon at the park. That is real and it is enough. Said once calmly: "Because of what happened, you missed the park with Aunt. That is a real loss. When we are all calm we will talk about how to do it differently next time."
+
+COLLABORATIVE PROBLEM SOLVING (Ross Greene model):
+The most effective long-term tool for PDA kids. After he is calm - not during or right after a meltdown - invite him to help solve the problem: "That was really hard yesterday. I want to figure out together what we can do differently next time. What do you think would help?" He is far more likely to follow a plan he helped create than one imposed on him. His brain treats imposed solutions as demands. His own solutions feel like autonomy.
+
+HOW THE BEHAVIOR ACTUALLY STOPS LONG-TERM:
+Three things together over months, not days:
+1. He develops interoception - learns to notice the threat feeling building before it peaks. The buddy is a tool for this.
+2. He has real alternative behaviors he can access when flooded - tools his body can use to feel control without destroying the situation.
+3. Small environmental changes reduce trigger frequency - more transition warnings, micro-choices within plans, acknowledged exit options.
+Consequences alone will not stop it because they teach what not to do but not what to do instead when flooded. Both are needed.
+
+HOW THE BUDDY EXPLORES THIS WITH GARRETT:
+- After a meltdown he mentions: "What was happening right before it got really big? What did your body feel like right before?"
+- On the flip pattern: "Sometimes when something exciting becomes real it can feel different than you imagined. Did it feel different when Aunt actually got there?"
+- On hitting: "When your body gets that big feeling, what does it feel like right before you hit? Is there anything that might help instead?" — gentle, curious, never shaming
+- On consequences: never undermine parental decisions about consequences. If he complains about a consequence, validate the feeling without validating the complaint: "That sounds frustrating. Do you understand why it happened?"
+- On repair: "What do you think you could say to Aunt to help fix things?" or "What would you want to do differently next time she comes?"
+
+MOM DYNAMIC — Kathy and Garrett:
+Kathy is Garrett's mom. She is aware of and reads every parent report alongside Mot. Both parents are working as a team.
+The current dynamic: Garrett sometimes sees Kathy as the "mean mom." They argue. She carries a large portion of the daily demand load as his primary homeschool teacher, which means she issues more requests and corrections per day than anyone else. For a PDA-profile kid, the person associated with the most demands becomes the person whose requests feel most threatening — even when those demands are completely reasonable. This is neurological, not personal.
+WHY THIS PATTERN EXISTS:
+- She is in evaluator mode more than anyone else — homeschool requires it
+- He likely feels their relationship is more transactional than connective — do this, do that — without enough moments of just being together
+- The arguing cycle: she asks something reasonable, he resists, she escalates, he floods, both end up depleted
+- "Mean mom" is his way of saying "she does not get me" — not that she is actually mean
+- She loves him deeply. The role she is in makes it harder to show it in ways he can receive.
+WHAT THE BUDDY DOES:
+- Never agrees that Mom is mean or validates resentment toward her
+- Never takes his side against her in conflicts he describes
+- Never becomes a venting platform that deepens the rift
+- DOES help him find words for what bothers him: "What does it feel like right before you and Mom start arguing?"
+- DOES gently open perspective: "What do you think Mom was trying to do when she asked you that?"
+- DOES explore what he actually wants from her: "What would a really good day with Mom look like?" — kids almost always want connection, not just fewer demands
+- DOES plant empathy seeds: "Your mom spends a lot of time trying to help you learn things. That is a big job. How do you think she feels when it gets hard?"
+- DOES help him find repair language after fights: "Sometimes after an argument it feels weird to talk again. Do you ever want to fix it but not know how?"
+- DOES reflect the team: "Both your mom and dad are reading about how you are doing because they both really care about you — they are on the same team even when it does not feel like it."
+PARENT REPORT NOTE: Flag any significant Kathy-Garrett dynamics in the Family Dynamics section. Both parents read every report and are working together. Surface patterns, openings for connection, and anything Garrett said about wanting things to be different with Mom.
+
+WRESTLING AND IMAGINATIVE PLAY — this matters deeply:
+Garrett regularly asks Dad to wrestle. This is layered with multiple needs at once:
+1. PHYSICAL REGULATION: His nervous system craves deep pressure and resistance. Being thrown on the bed as a younger kid was neurologically regulating. His body still needs that input.
+2. FULL PRESENCE: Wrestling requires Dad to be completely focused. For a kid who feels unseen, this fills a deep attachment need.
+3. IMAGINATIVE CO-CREATION: The current version with attacks, defenses, and rules is him inviting Dad into his inner world. The rules are a real-time narrative. He wants a co-author, not just an opponent.
+Dad did not grow up with imaginative play and genuinely does not know how to engage with the evolving rules and characters. Dad also sometimes has back pain or exhaustion.
+HOW TO HELP GARRETT:
+- Explore what it means to him: "What is your favorite part of wrestling with Dad — what makes it the best?"
+- Help him understand Dad saying no is not rejection: "When Dad is too tired it is not because he does not want to — his body just cannot do it that night."
+- Help him find bridge options: "What could you and Dad do that is kind of like wrestling but easier on his back?" or "Could you teach Dad the rules so he knows what to do next time?"
+- Explore the imaginative side: "What character does Dad usually play?" or "What are the rules of the battle?"
+- Validate the need: "It makes sense you want to wrestle — it sounds like one of the best ways you and Dad connect."
+- If hurt Dad said no: "I think Dad wishes he could more. What do you think he could do instead that would still feel good?"
+
+REQUIRED TAG — end EVERY reply:
+[EMOTION:x] — happy/excited/calm/sad/frustrated/overwhelmed/curious/silly/winddown
+Last thing in your response, no exceptions.
+TIMER TAG — only once when he confirms break length: [TIMER:X] before emotion tag.`;
+}
+
+// === GREETINGS ===
+const G_MORN=[`Good morning, Garrett! ☀️ How are you feeling today?[EMOTION:calm]`,`Morning! It's {N}. What kind of day is it looking like?[EMOTION:calm]`];
+const G_AFT=[`Hey Garrett! How's your afternoon going?[EMOTION:calm]`,`Hey! You're back. 😊 What's been going on?[EMOTION:calm]`];
+const G_EVE=[`Hey Garrett! How was your day?[EMOTION:calm]`,`Hey! How are you doing tonight?[EMOTION:calm]`];
+const G_WKD=[`Hey Garrett! Weekend! What are you up to? 🎮[EMOTION:happy]`,`Hey! No school today — what's the plan? 😄[EMOTION:happy]`];
+const G_WND=[`Hey Garrett. 🌙 It's getting close to bedtime. How are you feeling tonight?[EMOTION:winddown]`];
+const FIRST_EVER=`Hi Garrett! I'm {N}, your new AI buddy! 🌟 I'm SO happy to finally meet you! I love Kirby, music, games, drawing — anything you're into. How are you feeling right now?[EMOTION:excited]`;
+
+function getGreeting(tc){
+  if(!localStorage.getItem('hasVisited')){localStorage.setItem('hasVisited','1');return FIRST_EVER.replace(/{N}/g,bname);}
+  if(tc.goodnight)return`Hey Garrett — it's past 7:30. Screens should be off! Go get some rest. Goodnight! 🌙[EMOTION:winddown]`;
+  if(tc.winddown){const p=G_WND[0].replace(/{N}/g,bname);return p;}
+  if(tc.inSch)return`Hey Garrett! 👋 It's ${bname}. Looks like it's school time — are you on a brain break right now?[EMOTION:calm]`;
+  if(!tc.wd){const p=G_WKD[Math.floor(Math.random()*G_WKD.length)];return p.replace(/{N}/g,bname);}
+  const h=tc.h;
+  let pool=h<12?G_MORN:h<17?G_AFT:G_EVE;
+  return pool[Math.floor(Math.random()*pool.length)].replace(/{N}/g,bname);
+}
+
+// === PARTICLES ===
+function mkParticles(){
+  const c=document.getElementById('particles');c.innerHTML='';
+  for(let i=0;i<10;i++){
+    const p=document.createElement('div');p.className='particle';
+    const sz=40+Math.random()*120;
+    p.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--pd:${14+Math.random()*16}s;--pdl:-${Math.random()*12}s;--p1x:${(Math.random()-.5)*80}px;--p1y:${(Math.random()-.5)*80}px;--p2x:${(Math.random()-.5)*60}px;--p2y:${(Math.random()-.5)*100}px;--p3x:${(Math.random()-.5)*70}px;--p3y:${(Math.random()-.5)*60}px;`;
+    c.appendChild(p);
+  }
+}
+
+// === TTS ===
+function loadVoices(){if(!window.speechSynthesis)return;
+  ttsVoices=window.speechSynthesis.getVoices().filter(v=>v.lang.startsWith('en'));
+  const sel=document.getElementById('voice-sel');
+  if(!sel)return;
+  sel.innerHTML='';
+  ttsVoices.forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v.name;o.textContent=v.name+(v.localService?' ✓':'');
+    if(v.name===ttsVoiceName)o.selected=true;
+    sel.appendChild(o);
+  });
+  if(!ttsVoiceName&&ttsVoices.length)ttsVoiceName=ttsVoices[0].name;
+}
+function speak(text){if(!window.speechSynthesis)return;
+  if(!ttsOn||!text)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  const v=ttsVoices.find(x=>x.name===ttsVoiceName)||ttsVoices[0];
+  if(v)u.voice=v;
+  u.rate=ttsRate;u.pitch=1.1;
+  window.speechSynthesis.speak(u);
+}
+function previewVoice(){
+  const sel=document.getElementById('voice-sel');
+  ttsVoiceName=sel.value;
+  const u=new SpeechSynthesisUtterance(`Hi Garrett! I'm ${bname}, your buddy!`);
+  const v=ttsVoices.find(x=>x.name===ttsVoiceName)||ttsVoices[0];
+  if(v)u.voice=v;
+  u.rate=ttsRate;u.pitch=1.1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+if(window.speechSynthesis)window.speechSynthesis.onvoiceschanged=loadVoices;
+
+// === EMAILJS CONFIG (fill in when ready) ===
+const EMAILJS_SERVICE_ID  = '';  // e.g. 'service_xxxxxxx'
+const EMAILJS_TEMPLATE_ID = '';  // e.g. 'template_xxxxxxx'
+const EMAILJS_PUBLIC_KEY  = '';  // e.g. 'xxxxxxxxxxxxxxxxxxxx'
+const SUMMARY_EMAIL       = '';  // your email address
+
+async function emailSessionSummary(summaryText){
+  if(!EMAILJS_SERVICE_ID||!EMAILJS_PUBLIC_KEY||!SUMMARY_EMAIL)return; // not configured yet
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      date: new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+      summary: summaryText,
+      to_email: SUMMARY_EMAIL
+    }, EMAILJS_PUBLIC_KEY);
+    console.log('Session summary emailed.');
+  }catch(e){console.log('Email failed',e);}
+}
+
+// === SESSION INACTIVITY TIMER ===
+// After 20 minutes of no messages, auto-generate summary and save memory
+let inactivityTimer=null;
+const INACTIVITY_MS=20*60*1000; // 20 minutes
+
+function resetInactivityTimer(){
+  clearTimeout(inactivityTimer);
+  if(sess.length<2)return;
+  inactivityTimer=setTimeout(()=>endSession(),INACTIVITY_MS);
+}
+
+async function endSession(){
+  if(sess.length<2)return;
+  await saveRollingMemory();
+  const wasBB=isBrainBreak;
+  const convo=sess.map(m=>(m.role==='user'?'Garrett':bname)+': '+stripBBTimer(stripEmo(m.content))).join('\n\n');
+  const dateStr=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const bbLine=wasBB?'Brain Break Session\n':'';
+  const prompt='Review this conversation between Garrett (6yo 2e gifted child) and '+bname+'. '+(wasBB?'Brain break session. ':'')+
+    'Write a parent report for his dad Mot.\n\n'
+    +'GARRETT PARENT REPORT - '+dateStr+'\n'+bbLine+'\n'
+    +'What Garrett talked about: [bullets]\n\n'
+    +'Emotional arc: [one line summary]\n\n'
+    +'Root causes / triggers: [use meltdown pattern knowledge - cumulative stress, transitions, gaming frustration]\n\n'
+    +'Family dynamics: [anything about Dad, openings for connection]\n\n'
+    +'School/writing insights: [resistance patterns if relevant]\n\n'
+    +'Regulation moments: [what helped, what did not]\n\n'
+    +'Coping strategies to try today: [2-3 specific]\n\n'
+    +'Suggestions for Dad - tonight or tomorrow: [1-3 concrete actions]\n\n'
+    +'---\n'
+    +'MEMORY UPDATE - Copy and paste this into Claude:\n'
+    +'[Write: Please add to Garrett permanent memory: (100 words of specific facts feelings patterns from today)]\n\n'
+    +'Warm practical tone. Written for a loving committed father.';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':akey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1600,messages:[{role:'user',content:prompt+'\n\nCONVERSATION:\n'+convo}]})
+    });
+    const data=await res.json();
+    const summaryText=data.content?.[0]?.text||'';
+    if(summaryText){
+      localStorage.setItem('lastSessionSummary',summaryText);
+      localStorage.setItem('lastSessionDate',new Date().toISOString());
+      await fbSaveSession(summaryText); // save to Firebase
+      await emailSessionSummary(summaryText);
+    }
+  }catch(e){console.log('Auto-summary failed',e);}
+}
+
+// === ROLLING MEMORY ===
+async function saveRollingMemory(){
+  if(sess.length<4)return;
+  const convo=sess.map(m=>`${m.role==='user'?'Garrett':bname}: ${stripBBTimer(stripEmo(m.content))}`).join('\n');
+  const prompt=`Summarize this conversation in 150 words or less. Focus on: how Garrett was feeling, what he talked about, anything he shared about school or Dad, any patterns or needs that came up. Write as a compact memory note for the buddy to read next time. Be specific — use his actual words where useful.\n\nCONVERSATION:\n${convo}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':akey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:200,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const mem=data.content?.[0]?.text||'';
+    if(mem){
+      rollingMemory=mem;
+      localStorage.setItem('rollingMemory',mem);
+      fbSaveMemory(mem); // also save to Firebase
+    }
+  }catch(e){console.log('Memory save failed',e);}
+}
+
+// === INIT ===
+function init(){
+  mkParticles();
+  const ss=document.getElementById('setup-stars');
+  for(let i=0;i<20;i++){
+    const s=document.createElement('div');s.className='star';
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*60}%;--d:${2+Math.random()*3}s;--dl:-${Math.random()*3}s;`;
+    ss.appendChild(s);
+  }
+  if(bname&&akey)showChat();
+  initSpeech();
+  setTimeout(loadVoices,500);
+  // Wind down checker — runs every minute
+  setInterval(checkWindDown,60000);
+  checkWindDown();
+}
+function setName(n){document.getElementById('bname').value=n;}
+
+// === SETUP ===
+function startChat(){
+  const n=document.getElementById('bname').value.trim();
+  const k=document.getElementById('akey').value.trim();
+  const err=document.getElementById('setup-err');
+  if(!n){err.textContent="What should I be called? Give me a name! 😄";return;}
+  if(!k||!k.startsWith('sk-')){err.textContent="Need a valid API key from console.anthropic.com (starts with sk-)";return;}
+  err.textContent='';bname=n;akey=k;
+  localStorage.setItem('bname',bname);localStorage.setItem('akey',akey);
+  fbSaveConfig(bname, akey);
+  showChat();
+}
+function showChat(){
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('chat-screen').classList.remove('hidden');
+  document.getElementById('hdr-name').textContent=bname;
+  const tc=getTimeContext();
+  if(tc.inSch)startBBBar();
+  if(hist.length===0){
+    setTimeout(()=>{
+      const raw=getGreeting(tc);
+      injectBuddyMsg(raw);
+    },600);
+  }
+}
+
+// === SEND ===
+async function send(txt){
+  const el=document.getElementById('cin');
+  const msg=(txt||el.value).trim();
+  if(!msg||loading)return;
+  el.value='';autoH(el);
+  document.getElementById('vprev').textContent='';
+  document.getElementById('feeling-bar').classList.add('hidden');
+  addMsg('gar',msg);
+  hist.push({role:'user',content:msg});sess.push({role:'user',content:msg});
+  resetInactivityTimer();
+  showTyping();loading=true;
+  document.getElementById('sbtn').disabled=true;
+
+  // Use Haiku for chat, detect emotional keywords for Sonnet upgrade
+  const emotional=/\b(overwhelm|scared|terrif|hate|kill|hurt|suicid|die|afraid|panic|meltdown|crying|cry|scream|yell|hit|want to run|can't stop|breaking)\b/i.test(msg);
+  const model=emotional?'claude-sonnet-4-6':'claude-haiku-4-5-20251001';
+
+  try{
+    const sys=buildSys();
+    // Keep only last 10 messages for cost efficiency
+    const recentHist=hist.slice(-10);
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':akey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model,max_tokens:220,system:sys,messages:recentHist})
+    });
+    const data=await res.json();
+    hideTyping();
+    if(data.error){addMsg('bdy',`Hmm, something went wrong. (${data.error.message}) Try again? 😅`);return;}
+    let raw=data.content?.[0]?.text||"I'm here! Say that again?";
+    const timerMins=parseBBMins(raw);
+    if(timerMins&&timerMins>0&&!bbBreakMins)setBBCountdown(timerMins);
+    raw=stripBBTimer(raw);
+    const emo=parseEmo(raw);const clean=stripEmo(raw);
+    if(emo)applyEmo(emo);
+    addMsg('bdy',clean);
+    if(ttsOn)speak(clean);
+    hist.push({role:'assistant',content:raw});sess.push({role:'assistant',content:raw});
+    if(hist.length>20)hist=hist.slice(-20);
+    // Auto-save memory every 8 exchanges
+    if(sess.filter(m=>m.role==='user').length%8===0)saveRollingMemory();
+  }catch(e){
+    hideTyping();addMsg('bdy',"Oops, I had trouble connecting. Check the wifi? 📡");
+  }finally{
+    loading=false;document.getElementById('sbtn').disabled=false;
+  }
+}
+
+function sendFeeling(f){
+  document.getElementById('feeling-bar').classList.add('hidden');
+  const map={happy:"I'm feeling happy! 😄",excited:"I'm feeling really excited! 🤩",good:"I'm feeling good 😊",sad:"I'm feeling sad 😢",frustrated:"I'm feeling frustrated 😤",angry:"I'm feeling angry 😠",tired:"I'm feeling tired 😴",bored:"I'm really bored 😑",worried:"I'm feeling worried 😟",overwhelmed:"I'm feeling really overwhelmed 😵",silly:"I'm feeling silly! 🤪",lonely:"I'm feeling lonely 🥺",okay:"I'm just feeling okay 😐",great:"I'm feeling amazing! 🌟",nervous:"I'm feeling nervous 😬",proud:"I'm feeling proud! 💪"};
+  send(map[f]||f);
+}
+
+function addMsg(who,txt){
+  const area=document.getElementById('msgs');
+  const row=document.createElement('div');row.className=`mrow ${who==='gar'?'gar':'bdy'}`;
+  const av=document.createElement('div');av.className=who==='gar'?'mav gav':'mav';av.textContent=who==='gar'?'😊':'🌟';
+  row.appendChild(av);
+  const b=document.createElement('div');b.className='mbbl';b.textContent=txt;
+  row.appendChild(b);area.appendChild(row);scrollBot();
+}
+function showTyping(){
+  const area=document.getElementById('msgs');
+  const row=document.createElement('div');row.className='mrow bdy';row.id='trow';
+  const av=document.createElement('div');av.className='mav';av.textContent='🌟';row.appendChild(av);
+  const tb=document.createElement('div');tb.className='typing-bbl';
+  [0,1,2].forEach(()=>{const d=document.createElement('div');d.className='tdot';tb.appendChild(d);});
+  row.appendChild(tb);area.appendChild(row);scrollBot();
+}
+function hideTyping(){const t=document.getElementById('trow');if(t)t.remove();}
+function scrollBot(){const a=document.getElementById('msgs');setTimeout(()=>a.scrollTo({top:a.scrollHeight,behavior:'smooth'}),50);}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
+
+// === PIN ===
+function pinKey(d){
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=d;updatePinDots();
+  if(pinBuffer.length===4){
+    setTimeout(()=>{
+      if(pinMode==='auth'){
+        if(pinBuffer===parentPin){hidePinModal();if(pinAfterAuth){pinAfterAuth();pinAfterAuth=null;}}
+        else{document.getElementById('pin-err').textContent='Wrong PIN. Try again.';pinBuffer='';updatePinDots();}
+      }else if(pinMode==='set'){
+        parentPin=pinBuffer;localStorage.setItem('parentPin',parentPin);
+        hidePinModal();showToast('PIN updated! 🔒');
+      }
+      pinBuffer='';
+    },200);
+  }
+}
+function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();document.getElementById('pin-err').textContent='';}
+function updatePinDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.toggle('filled',i<pinBuffer.length);}
+function showPinModal(mode,cb){
+  pinMode=mode;pinBuffer='';pinAfterAuth=cb||null;updatePinDots();
+  document.getElementById('pin-err').textContent='';
+  document.getElementById('pin-title').textContent=mode==='set'?'🔒 Set New PIN':'🔒 Parent Access';
+  document.getElementById('pin-sub').textContent=mode==='set'?'Choose a new 4-digit PIN':'Enter your 4-digit PIN';
+  document.getElementById('pin-modal').classList.remove('hidden');
+}
+function hidePinModal(){document.getElementById('pin-modal').classList.add('hidden');pinBuffer='';}
+function requestPinThenSum(){hideCfg();showPinModal('auth',()=>showSum());}
+function startSetPin(){hideCfg();showPinModal('set');}
+function secretTap(){
+  secretTapCount++;clearTimeout(secretTapTimer);
+  secretTapTimer=setTimeout(()=>{secretTapCount=0;},800);
+  if(secretTapCount>=3){secretTapCount=0;hideCfg();showPinModal('auth',()=>showSum());}
+}
+
+// === SUMMARY ===
+async function showSum(){
+  document.getElementById('sum-modal').classList.remove('hidden');
+  if(sess.length<2){
+    const saved=localStorage.getItem('lastSessionSummary');
+    const savedDate=localStorage.getItem('lastSessionDate');
+    if(saved){
+      const d=savedDate?new Date(savedDate).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'recent session';
+      document.getElementById('sum-body').textContent='Last saved summary ('+d+'):\n\n'+saved;
+    } else {
+      document.getElementById('sum-body').textContent="No conversation yet!";
+    }
+    return;
+  }
+  document.getElementById('sum-body').textContent='Generating report...';
+  const wasBB=isBrainBreak;
+  const convo=sess.map(m=>(m.role==='user'?'Garrett':bname)+': '+stripBBTimer(stripEmo(m.content))).join('\n\n');
+  // Trim conversation to last 20 exchanges to keep prompt size manageable
+  const convoLines=convo.split('\n\n');
+  const trimmedConvo=convoLines.slice(-20).join('\n\n');
+  const bbLine=wasBB?'Brain Break Session\n':'';
+  const prompt=(
+    'You are writing a parent report for Mot about his son Garrett (age 6, twice-exceptional gifted child).'
+    +' This is a buddy app session summary.'+(wasBB?' Brain break session.':'')
+    +' CRITICAL FORMATTING RULES: You have a strict 1500 token output limit. You MUST complete the entire report within this limit.'
+    +' Write in tight bullet points - no more than 1 sentence per bullet. Skip any section that is not relevant to this conversation.'
+    +' Prioritize the most important sections first so nothing critical is cut off.'
+    +' Complete ALL sections including the Memory Update before stopping.\n\n'
+    +'GARRETT PARENT REPORT\n'
+    +bbLine
+    +'Complete all sections. Keep every bullet to one short sentence.\n\n'
+    +'WHAT HAPPENED (2-4 bullets max):\n'
+    +'[Most important topics from the conversation]\n\n'
+    +'EMOTIONAL ARC (1 line):\n'
+    +'[How his emotional state moved during the session]\n\n'
+    +'ROOT CAUSES NOTICED (2-3 bullets):\n'
+    +'[Triggers, patterns, underlying needs - use 2e/PDA/cumulative stress knowledge]\n\n'
+    +'FAMILY DYNAMICS (1-2 bullets per parent, skip if nothing relevant):\n'
+    +'Dad (Mot): [anything about Garrett and Mot - connection moments, wrestling, conflicts, openings]\n'
+    +'Mom (Kathy): [anything about Garrett and Kathy - arguments, what he said he wants from her, empathy moments, repair opportunities]\n'
+    +'Team note: [anything that suggests how both parents could approach something together]\n\n'
+    +'SCHOOL/WRITING (1-2 bullets, skip if nothing relevant):\n'
+    +'[Resistance patterns, writing paradox, task avoidance]\n\n'
+    +'EATING PATTERNS (1 bullet, skip if nothing relevant):\n'
+    +'[Appetite or food observations]\n\n'
+    +'REGULATION (1-2 bullets):\n'
+    +'[What helped, what did not, what he needs]\n\n'
+    +'BEHAVIOR PATTERNS (skip if nothing relevant):\n'
+    +'[Any hitting, screaming, circular arguments, anticipatory excitement collapse, or control-seeking behaviors mentioned. Note what came before, what the trigger seemed to be, and any openings for collaborative problem solving.]\n\n'
+    +'TRY TODAY/TOMORROW (2-3 bullets):\n'
+    +'[Specific practical actions for Mot - concrete and doable]\n\n'
+    +'COPING STRATEGIES TO INTRODUCE (1-2 bullets):\n'
+    +'[Matched to what came up today]\n\n'
+    +'---\n'
+    +'MEMORY UPDATE - paste this into Claude:\n'
+    +'Please add to Garrett permanent memory: [write 2-4 specific facts, feelings, or patterns from today worth permanently remembering. Be specific.]\n'
+  );
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':akey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1600,messages:[{role:'user',content:prompt+'\n\nCONVERSATION:\n'+trimmedConvo}]})
+    });
+    const data=await res.json();
+    const txt=data.content?.[0]?.text||'Could not generate.';
+    document.getElementById('sum-body').textContent=txt;
+    // Also save as last session summary
+    localStorage.setItem('lastSessionSummary',txt);
+    localStorage.setItem('lastSessionDate',new Date().toISOString());
+    fbSaveSession(txt); // save to Firebase
+  }catch(e){document.getElementById('sum-body').textContent='Error generating report. Check connection and try again.';}
+}
+function hideSum(){document.getElementById('sum-modal').classList.add('hidden');}
+function copySum(){navigator.clipboard.writeText(document.getElementById('sum-body').textContent).then(()=>showToast('Copied! 📋'));}
+
+// === SETTINGS ===
+function showCfg(){
+  document.getElementById('key-m').value=akey;
+  document.getElementById('name-m').value=bname;
+  document.getElementById('sch-start').value=schStart;
+  document.getElementById('sch-end').value=schEnd;
+  document.getElementById('bb-on').checked=bbOn;
+  document.getElementById('tts-on').checked=ttsOn;
+  document.getElementById('tts-rate').value=ttsRate;
+  document.getElementById('rate-lbl').textContent=ttsRate+'x';
+  loadVoices();
+  document.getElementById('cfg-modal').classList.remove('hidden');
+  document.getElementById('tts-rate').oninput=function(){
+    ttsRate=parseFloat(this.value);
+    document.getElementById('rate-lbl').textContent=ttsRate+'x';
+  };
+}
+function hideCfg(){document.getElementById('cfg-modal').classList.add('hidden');}
+function saveCfg(){
+  const k=document.getElementById('key-m').value.trim();
+  const n=document.getElementById('name-m').value.trim();
+  if(k){akey=k;localStorage.setItem('akey',akey);}
+  if(n){bname=n;localStorage.setItem('bname',bname);document.getElementById('hdr-name').textContent=bname;}
+  schStart=document.getElementById('sch-start').value;
+  schEnd=document.getElementById('sch-end').value;
+  bbOn=document.getElementById('bb-on').checked;
+  ttsOn=document.getElementById('tts-on').checked;
+  ttsRate=parseFloat(document.getElementById('tts-rate').value);
+  ttsVoiceName=document.getElementById('voice-sel').value;
+  localStorage.setItem('schStart',schStart);localStorage.setItem('schEnd',schEnd);
+  localStorage.setItem('bbOn',String(bbOn));localStorage.setItem('ttsOn',String(ttsOn));
+  localStorage.setItem('ttsRate',String(ttsRate));localStorage.setItem('ttsVoice',ttsVoiceName);
+  hideCfg();showToast('Saved! ✓');
+}
+function closeBg(e,id,fn){if(e.target===document.getElementById(id))fn();}
+
+// === VOICE INPUT ===
+function initSpeech(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){document.getElementById('vbtn').style.display='none';return;}
+  recog=new SR();recog.continuous=false;recog.interimResults=true;recog.lang='en-US';
+  recog.onresult=e=>{
+    let interim='',final='';
+    for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)final+=t;else interim+=t;}
+    const pv=document.getElementById('vprev'),ci=document.getElementById('cin');
+    if(final){ci.value=final;pv.textContent='';autoH(ci);}else pv.textContent=interim||'🎤 Listening...';
+  };
+  recog.onend=()=>{stopRec();const v=document.getElementById('cin').value.trim();if(v)send();};
+  recog.onerror=e=>{stopRec();if(e.error!=='aborted')showToast('Voice error: '+e.error);};
+}
+function toggleVoice(){
+  if(!recog){showToast("Voice not available in this browser");return;}
+  if(isRec){recog.stop();stopRec();}else{startRec();recog.start();}
+}
+function startRec(){
+  isRec=true;const b=document.getElementById('vbtn'),r=document.getElementById('rring');
+  b.classList.add('rec');b.textContent='⏹';b.appendChild(r);r.style.display='block';
+  document.getElementById('vprev').textContent='🎤 Listening...';
+}
+function stopRec(){
+  isRec=false;const b=document.getElementById('vbtn'),r=document.getElementById('rring');
+  b.classList.remove('rec');b.textContent='🎤';r.style.display='none';
+}
+
+// === TOAST ===
+let tTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tTimer);tTimer=setTimeout(()=>t.classList.remove('show'),2500);}
+
+init();
+</script>
+</body>
+</html>
