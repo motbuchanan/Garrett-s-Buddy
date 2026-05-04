@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Buddy Reports">
+<title>Garrett — Parent Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;font-family:'Nunito',sans-serif;color:#1a2744;background:#F0F4FF;}
+body{overflow-y:auto;}
+
+/* PIN SCREEN */
+#pin-screen{position:fixed;inset:0;background:linear-gradient(160deg,#1a2744,#2a3f6f);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:100;padding:32px;}
+#pin-screen.hidden{display:none;}
+.pin-title{font-family:'Baloo 2',cursive;font-size:28px;font-weight:800;color:white;text-align:center;}
+.pin-sub{font-size:15px;color:rgba(255,255,255,.6);font-weight:600;}
+.pin-dots{display:flex;gap:14px;}
+.pin-dot{width:20px;height:20px;border-radius:50%;border:2.5px solid rgba(255,255,255,.4);background:transparent;transition:background .2s;}
+.pin-dot.filled{background:#5BBFFF;border-color:#5BBFFF;}
+.pin-err{font-size:14px;color:#FF6B6B;font-weight:700;min-height:20px;}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:280px;width:100%;}
+.pin-key{padding:18px;border-radius:18px;border:none;background:rgba(255,255,255,.1);color:white;font-family:'Baloo 2',cursive;font-size:24px;font-weight:800;cursor:pointer;transition:all .15s;backdrop-filter:blur(4px);}
+.pin-key:active{background:rgba(255,255,255,.25);transform:scale(.93);}
+.pin-key.del{background:rgba(255,100,100,.2);color:#FF9999;}
+
+/* DASHBOARD */
+#dash{max-width:700px;margin:0 auto;padding:24px 16px 60px;}
+
+.dash-header{background:linear-gradient(135deg,#1a2744,#2a3f6f);border-radius:20px;padding:24px;margin-bottom:20px;color:white;}
+.dash-title{font-family:'Baloo 2',cursive;font-size:28px;font-weight:800;margin-bottom:4px;}
+.dash-sub{font-size:14px;color:rgba(255,255,255,.6);font-weight:600;}
+.dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;}
+.stat-box{background:rgba(255,255,255,.1);border-radius:14px;padding:12px;text-align:center;}
+.stat-num{font-family:'Baloo 2',cursive;font-size:28px;font-weight:800;color:#5BBFFF;}
+.stat-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.5px;}
+
+/* EMOTION TREND */
+.section-title{font-family:'Baloo 2',cursive;font-size:18px;font-weight:800;color:#1a2744;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.trend-wrap{background:white;border-radius:16px;padding:16px;margin-bottom:20px;box-shadow:0 2px 12px rgba(30,80,140,.08);}
+.trend-bars{display:flex;gap:8px;align-items:flex-end;height:80px;margin-bottom:8px;}
+.trend-bar{flex:1;border-radius:6px 6px 0 0;min-height:4px;transition:height .6s ease;position:relative;}
+.trend-bar-lbl{font-size:10px;font-weight:700;color:#7a9bb5;text-align:center;margin-top:4px;}
+.trend-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#3a5270;}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* SESSION LIST */
+.sessions-wrap{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.session-card{background:white;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(30,80,140,.08);cursor:pointer;transition:all .2s;border:2px solid transparent;}
+.session-card:active{transform:scale(.98);}
+.session-card.expanded{border-color:#5BBFFF;}
+.session-top{display:flex;align-items:center;gap:12px;}
+.session-emo{font-size:28px;}
+.session-info{flex:1;}
+.session-date{font-family:'Baloo 2',cursive;font-size:16px;font-weight:800;color:#1a2744;}
+.session-meta{font-size:13px;color:#7a9bb5;font-weight:600;margin-top:2px;}
+.session-arc{font-size:13px;font-weight:700;color:#3a5270;margin-top:6px;padding-top:6px;border-top:1px solid #E8F0FF;}
+.session-report{margin-top:12px;padding-top:12px;border-top:1.5px solid #E8F0FF;font-size:14px;line-height:1.7;color:#3a5270;font-weight:600;white-space:pre-wrap;display:none;}
+.session-card.expanded .session-report{display:block;}
+.session-actions{display:flex;gap:8px;margin-top:12px;}
+.sact-btn{flex:1;padding:10px;border-radius:12px;border:none;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
+.sact-btn.pri{background:linear-gradient(135deg,#5BBFFF,#3A9FE8);color:white;}
+.sact-btn.sec{background:#F0F4FF;color:#3a5270;}
+
+/* MEMORY SECTION */
+.memory-wrap{background:white;border-radius:16px;padding:16px;margin-bottom:20px;box-shadow:0 2px 12px rgba(30,80,140,.08);}
+.memory-text{font-size:14px;line-height:1.7;color:#3a5270;font-weight:600;white-space:pre-wrap;}
+.memory-date{font-size:12px;color:#adc5d8;font-weight:700;margin-top:8px;}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px 20px;color:#adc5d8;}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.empty-text{font-size:16px;font-weight:700;}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:#7a9bb5;font-weight:700;}
+
+.back-btn{display:flex;align-items:center;gap:8px;background:white;border:none;border-radius:14px;padding:12px 18px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;color:#3a5270;cursor:pointer;margin-bottom:20px;box-shadow:0 2px 8px rgba(30,80,140,.08);}
+
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  #dash{padding-bottom:calc(60px + env(safe-area-inset-bottom));}
+}
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="pin-title">📋 Parent Dashboard</div>
+  <div class="pin-sub">Enter your PIN to continue</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-err" id="pin-err"></div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pk('1')">1</button>
+    <button class="pin-key" onclick="pk('2')">2</button>
+    <button class="pin-key" onclick="pk('3')">3</button>
+    <button class="pin-key" onclick="pk('4')">4</button>
+    <button class="pin-key" onclick="pk('5')">5</button>
+    <button class="pin-key" onclick="pk('6')">6</button>
+    <button class="pin-key" onclick="pk('7')">7</button>
+    <button class="pin-key" onclick="pk('8')">8</button>
+    <button class="pin-key" onclick="pk('9')">9</button>
+    <button class="pin-key" onclick="pk('0')" style="grid-column:2">0</button>
+    <button class="pin-key del" onclick="pd()">⌫</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dash" style="display:none;">
+  <button class="back-btn" onclick="window.location.href='index.html'">← Back to Buddy</button>
+
+  <div class="dash-header">
+    <div class="dash-title">Garrett's Reports</div>
+    <div class="dash-sub">Session history and emotional trends</div>
+    <div class="dash-stats">
+      <div class="stat-box"><div class="stat-num" id="stat-sessions">—</div><div class="stat-lbl">Sessions</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-streak">—</div><div class="stat-lbl">Day Streak</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-topemo">—</div><div class="stat-lbl">Top Mood</div></div>
+    </div>
+  </div>
+
+  <!-- TREND -->
+  <div class="section-title">📈 Emotional Trend (Last 10 Sessions)</div>
+  <div class="trend-wrap">
+    <div class="trend-bars" id="trend-bars"><div class="loading">Loading...</div></div>
+    <div class="trend-legend" id="trend-legend"></div>
+  </div>
+
+  <!-- MEMORY -->
+  <div class="section-title">🧠 Current Memory</div>
+  <div class="memory-wrap">
+    <div class="memory-text" id="memory-text">Loading...</div>
+    <div class="memory-date" id="memory-date"></div>
+  </div>
+
+  <!-- SESSIONS -->
+  <div class="section-title">📋 Session Reports</div>
+  <div id="sessions-list" class="sessions-wrap">
+    <div class="loading">Loading sessions...</div>
+  </div>
+</div>
+
+<script>
+// Firebase config
+const FB_CONFIG = {
+  apiKey: "AIzaSyAFzxX0ogwQSLMXUXm5zqE1_Xhtk0y2tWg",
+  authDomain: "garrett-apps.firebaseapp.com",
+  projectId: "garrett-apps",
+  storageBucket: "garrett-apps.firebasestorage.app",
+  messagingSenderId: "325947708799",
+  appId: "1:325947708799:web:0a97e172036fa1f07b364a"
+};
+
+let db;
+function initFB() {
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+    else firebase.app();
+    db = firebase.firestore();
+  } catch(e) { console.log('FB init failed', e); }
+}
+
+// Emotion colors and emoji
+const EMO_STYLE = {
+  happy:       {color:'#FFD93D', emoji:'😄'},
+  excited:     {color:'#FF6EB0', emoji:'🤩'},
+  calm:        {color:'#5BBFFF', emoji:'😊'},
+  sad:         {color:'#6080C8', emoji:'😢'},
+  frustrated:  {color:'#FF8C42', emoji:'😤'},
+  overwhelmed: {color:'#8878C8', emoji:'😵'},
+  curious:     {color:'#20C0A0', emoji:'🤔'},
+  silly:       {color:'#88DD22', emoji:'🤪'},
+  winddown:    {color:'#8898C8', emoji:'🌙'},
+};
+
+// PIN
+let pinBuf = '';
+const parentPin = localStorage.getItem('parentPin') || '1234';
+
+function pk(d) {
+  if (pinBuf.length >= 4) return;
+  pinBuf += d;
+  updDots();
+  if (pinBuf.length === 4) {
+    setTimeout(() => {
+      if (pinBuf === parentPin) {
+        document.getElementById('pin-screen').classList.add('hidden');
+        document.getElementById('dash').style.display = 'block';
+        loadDashboard();
+      } else {
+        document.getElementById('pin-err').textContent = 'Wrong PIN. Try again.';
+        pinBuf = ''; updDots();
+      }
+    }, 200);
+  }
+}
+function pd() {
+  pinBuf = pinBuf.slice(0, -1);
+  updDots();
+  document.getElementById('pin-err').textContent = '';
+}
+function updDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('d' + i).classList.toggle('filled', i < pinBuf.length);
+  }
+}
+
+// Load dashboard
+async function loadDashboard() {
+  await Promise.all([loadMemory(), loadSessions()]);
+}
+
+async function loadMemory() {
+  try {
+    if (!db) { document.getElementById('memory-text').textContent = 'Firebase not connected.'; return; }
+    const doc = await db.collection('users').doc('garrett').get();
+    if (doc.exists && doc.data().rollingMemory) {
+      document.getElementById('memory-text').textContent = doc.data().rollingMemory;
+      const updated = doc.data().memoryUpdated;
+      if (updated) {
+        document.getElementById('memory-date').textContent = 'Last updated: ' + new Date(updated).toLocaleString('en-US', {weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      }
+    } else {
+      document.getElementById('memory-text').textContent = 'No memory saved yet. Memory builds after a few sessions.';
+    }
+  } catch(e) {
+    document.getElementById('memory-text').textContent = 'Could not load memory.';
+  }
+}
+
+async function loadSessions() {
+  try {
+    if (!db) {
+      document.getElementById('sessions-list').innerHTML = '<div class="empty"><div class="empty-icon">📡</div><div class="empty-text">Firebase not connected.</div></div>';
+      return;
+    }
+    const snap = await db.collection('users').doc('garrett').collection('sessions')
+      .orderBy('date', 'desc').limit(30).get();
+
+    if (snap.empty) {
+      document.getElementById('sessions-list').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No sessions saved yet.<br>Reports appear here after sessions.</div></div>';
+      return;
+    }
+
+    const sessions = [];
+    snap.forEach(doc => sessions.push({id: doc.id, ...doc.data()}));
+
+    // Stats
+    document.getElementById('stat-sessions').textContent = sessions.length;
+
+    // Streak
+    let streak = 0;
+    const today = new Date().toDateString();
+    const dates = [...new Set(sessions.map(s => new Date(s.date).toDateString()))];
+    for (let i = 0; i < dates.length; i++) {
+      const d = new Date(dates[i]);
+      const expected = new Date();
+      expected.setDate(expected.getDate() - i);
+      if (d.toDateString() === expected.toDateString()) streak++;
+      else break;
+    }
+    document.getElementById('stat-streak').textContent = streak + 'd';
+
+    // Top emotion
+    const emoCounts = {};
+    sessions.forEach(s => {
+      if (s.emotionalArc) emoCounts[s.emotionalArc] = (emoCounts[s.emotionalArc] || 0) + 1;
+    });
+    const topEmo = Object.entries(emoCounts).sort((a,b) => b[1]-a[1])[0];
+    document.getElementById('stat-topemo').textContent = topEmo ? (EMO_STYLE[topEmo[0]]?.emoji || '😊') : '😊';
+
+    // Trend bars
+    const recent = sessions.slice(0, 10).reverse();
+    const barsEl = document.getElementById('trend-bars');
+    const legendEl = document.getElementById('trend-legend');
+    barsEl.innerHTML = '';
+    const maxCount = Math.max(...Object.values(emoCounts), 1);
+    const seen = new Set();
+    recent.forEach((s, i) => {
+      const emo = s.emotionalArc || 'calm';
+      const style = EMO_STYLE[emo] || EMO_STYLE.calm;
+      const bar = document.createElement('div');
+      bar.className = 'trend-bar';
+      bar.style.background = style.color;
+      bar.style.height = '40px';
+      bar.title = emo;
+      const lbl = document.createElement('div');
+      lbl.className = 'trend-bar-lbl';
+      lbl.textContent = style.emoji;
+      const wrap = document.createElement('div');
+      wrap.style.flex = '1';
+      wrap.style.display = 'flex';
+      wrap.style.flexDirection = 'column';
+      wrap.style.alignItems = 'center';
+      wrap.appendChild(bar);
+      wrap.appendChild(lbl);
+      barsEl.appendChild(wrap);
+      if (!seen.has(emo)) {
+        seen.add(emo);
+        const li = document.createElement('div');
+        li.className = 'legend-item';
+        li.innerHTML = '<div class="legend-dot" style="background:' + style.color + '"></div>' + emo;
+        legendEl.appendChild(li);
+      }
+    });
+
+    // Session cards
+    const listEl = document.getElementById('sessions-list');
+    listEl.innerHTML = '';
+    sessions.forEach(s => {
+      const emo = s.emotionalArc || 'calm';
+      const style = EMO_STYLE[emo] || EMO_STYLE.calm;
+      const date = new Date(s.date);
+      const dateStr = date.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'});
+      const timeStr = date.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+
+      // Extract emotional arc line from summary
+      let arc = '';
+      if (s.summary) {
+        const arcMatch = s.summary.match(/EMOTIONAL ARC[^\n]*\n([^\n]+)/);
+        if (arcMatch) arc = arcMatch[1].trim();
+      }
+
+      const card = document.createElement('div');
+      card.className = 'session-card';
+      card.innerHTML =
+        '<div class="session-top">' +
+          '<div class="session-emo">' + style.emoji + '</div>' +
+          '<div class="session-info">' +
+            '<div class="session-date">' + dateStr + '</div>' +
+            '<div class="session-meta">' + timeStr + (s.messageCount ? ' · ' + s.messageCount + ' messages' : '') + '</div>' +
+          '</div>' +
+        '</div>' +
+        (arc ? '<div class="session-arc">' + arc + '</div>' : '') +
+        '<div class="session-report">' + (s.summary || 'No report saved.') + '</div>' +
+        '<div class="session-actions" style="display:none;">' +
+          '<button class="sact-btn sec" onclick="collapseCard(this)">Close</button>' +
+          '<button class="sact-btn pri" onclick="copyReport(this)">Copy 📋</button>' +
+        '</div>';
+
+      card.querySelector('.session-top').addEventListener('click', () => toggleCard(card));
+      listEl.appendChild(card);
+    });
+
+  } catch(e) {
+    console.log('loadSessions error:', e);
+    document.getElementById('sessions-list').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error loading sessions.<br>' + e.message + '</div></div>';
+  }
+}
+
+function toggleCard(card) {
+  const wasExpanded = card.classList.contains('expanded');
+  document.querySelectorAll('.session-card.expanded').forEach(c => {
+    c.classList.remove('expanded');
+    c.querySelector('.session-actions').style.display = 'none';
+  });
+  if (!wasExpanded) {
+    card.classList.add('expanded');
+    card.querySelector('.session-actions').style.display = 'flex';
+    card.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+}
+
+function collapseCard(btn) {
+  const card = btn.closest('.session-card');
+  card.classList.remove('expanded');
+  card.querySelector('.session-actions').style.display = 'none';
+}
+
+function copyReport(btn) {
+  const card = btn.closest('.session-card');
+  const text = card.querySelector('.session-report').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied! ✓';
+    setTimeout(() => btn.textContent = 'Copy 📋', 2000);
+  });
+}
+
+initFB();
+</script>
+</body>
+</html>
