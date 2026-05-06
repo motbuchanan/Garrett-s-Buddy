@@ -181,6 +181,27 @@ body.emo-sad .av-sm,body.emo-overwhelmed .av-sm,body.emo-winddown .av-sm{animati
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+// Pre-initialize Firebase immediately so it is ready before main script runs
+(function(){
+  try {
+    const cfg = {
+      apiKey: "AIzaSyAFzxX0ogwQSLMXUXm5zqE1_Xhtk0y2tWg",
+      authDomain: "garrett-apps.firebaseapp.com",
+      projectId: "garrett-apps",
+      storageBucket: "garrett-apps.firebasestorage.app",
+      messagingSenderId: "325947708799",
+      appId: "1:325947708799:web:0a97e172036fa1f07b364a"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    window._db = firebase.firestore();
+    console.log('[Firebase] Pre-initialized successfully');
+  } catch(e) {
+    console.error('[Firebase] Pre-init failed:', e);
+    window._db = null;
+  }
+})();
+</script>
 </head>
 <body class="emo-calm">
 <div id="particles"></div>
@@ -376,15 +397,21 @@ const FB_CONFIG = {
 let fbApp, db;
 function initFirebase() {
   try {
+    // Use pre-initialized db if available
+    if (window._db) {
+      db = window._db;
+      console.log('[Firebase] Using pre-initialized db');
+      return;
+    }
     if (!firebase.apps.length) {
       fbApp = firebase.initializeApp(FB_CONFIG);
     } else {
       fbApp = firebase.app();
     }
     db = firebase.firestore();
-    console.log('Firebase ready');
+    console.log('[Firebase] Initialized in initFirebase');
   } catch(e) {
-    console.log('Firebase init failed:', e);
+    console.log('[Firebase] Init failed:', e);
     db = null;
   }
 }
@@ -983,7 +1010,9 @@ async function saveRollingMemory(){
 }
 
 // === INIT ===
-function init(){
+async function init(){
+  initFirebase();
+  registerServiceWorker();
   mkParticles();
   const ss=document.getElementById('setup-stars');
   for(let i=0;i<20;i++){
@@ -991,10 +1020,32 @@ function init(){
     s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*60}%;--d:${2+Math.random()*3}s;--dl:-${Math.random()*3}s;`;
     ss.appendChild(s);
   }
+  // Test Firebase connection on startup
+  try {
+    if (db) {
+      await db.collection('users').doc('garrett').set({
+        appVersion: 'v1.0.9',
+        lastOpen: new Date().toISOString()
+      }, { merge: true });
+      console.log('[Firebase] Connection verified');
+    } else {
+      console.warn('[Firebase] db is null after init');
+    }
+  } catch(e) {
+    console.error('[Firebase] Connection test failed:', e.message);
+  }
+  // Load memory from Firebase, fall back to localStorage
+  try {
+    const fbMem = await fbLoadMemory();
+    if (fbMem) {
+      rollingMemory = fbMem;
+      localStorage.setItem('rollingMemory', fbMem);
+      console.log('[Firebase] Memory loaded');
+    }
+  } catch(e) { console.log('Memory load failed', e); }
   if(bname&&akey)showChat();
   initSpeech();
   setTimeout(loadVoices,500);
-  // Wind down checker — runs every minute
   setInterval(checkWindDown,60000);
   checkWindDown();
 }

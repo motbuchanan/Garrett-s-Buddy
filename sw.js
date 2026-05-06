@@ -1,7 +1,7 @@
 // Garrett's Buddy - Service Worker
 // Increment this version number every time you deploy a new version
 // This forces all devices to fetch fresh files instead of using cache
-const VERSION = 'v1.0.9';
+const VERSION = 'v1.1.0';
 const CACHE_NAME = 'garretts-buddy-' + VERSION;
 
 // Files to cache for offline use
