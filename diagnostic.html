@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firebase Diagnostic</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Courier New',monospace;background:#0a0a0a;color:#00ff88;padding:20px;min-height:100vh;}
+h1{font-size:18px;margin-bottom:20px;color:#5BBFFF;}
+.card{background:#111;border:1px solid #333;border-radius:8px;padding:16px;margin-bottom:12px;}
+.card-title{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.status{font-size:16px;font-weight:bold;margin-bottom:4px;}
+.status.ok{color:#00ff88;}
+.status.fail{color:#ff4444;}
+.status.pending{color:#ffaa00;}
+.detail{font-size:12px;color:#666;word-break:break-all;line-height:1.6;}
+.btn{display:block;width:100%;padding:14px;border-radius:8px;border:none;background:#5BBFFF;color:#0a0a0a;font-family:'Courier New',monospace;font-size:15px;font-weight:bold;cursor:pointer;margin-bottom:12px;}
+.btn:active{opacity:.8;}
+.btn.danger{background:#ff4444;color:white;}
+.log{background:#0a0a0a;border:1px solid #222;border-radius:6px;padding:12px;font-size:11px;color:#888;height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;}
+.timestamp{color:#444;font-size:10px;}
+</style>
+</head>
+<body>
+
+<h1>🔥 Firebase Diagnostic Tool</h1>
+<p style="font-size:12px;color:#555;margin-bottom:20px;">garrett-apps project · Run from any device to test connection</p>
+
+<!-- STATUS CARDS -->
+<div class="card">
+  <div class="card-title">Firebase SDK</div>
+  <div class="status pending" id="sdk-status">Checking...</div>
+  <div class="detail" id="sdk-detail"></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Firestore Connection</div>
+  <div class="status pending" id="db-status">Waiting...</div>
+  <div class="detail" id="db-detail"></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Write Test</div>
+  <div class="status pending" id="write-status">Waiting...</div>
+  <div class="detail" id="write-detail"></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Read Test</div>
+  <div class="status pending" id="read-status">Waiting...</div>
+  <div class="detail" id="read-detail"></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Current Garrett Data</div>
+  <div class="status pending" id="data-status">Waiting...</div>
+  <div class="detail" id="data-detail" style="color:#aaa;line-height:1.8;"></div>
+</div>
+
+<!-- ACTIONS -->
+<button class="btn" onclick="runDiagnostic()">▶ Run Full Diagnostic</button>
+<button class="btn" onclick="writeTestData()">✏️ Write Test Record Now</button>
+<button class="btn" onclick="readAllSessions()">📋 Read All Sessions</button>
+<button class="btn danger" onclick="clearTestData()">🗑 Clear Test Data</button>
+
+<!-- LOG -->
+<div class="card">
+  <div class="card-title">Console Log</div>
+  <div class="log" id="log"></div>
+</div>
+
+<script>
+const FB_CONFIG = {
+  apiKey: "AIzaSyAFzxX0ogwQSLMXUXm5zqE1_Xhtk0y2tWg",
+  authDomain: "garrett-apps.firebaseapp.com",
+  projectId: "garrett-apps",
+  storageBucket: "garrett-apps.firebasestorage.app",
+  messagingSenderId: "325947708799",
+  appId: "1:325947708799:web:0a97e172036fa1f07b364a"
+};
+
+let db = null;
+
+function log(msg, color) {
+  const el = document.getElementById('log');
+  const time = new Date().toLocaleTimeString();
+  const line = document.createElement('div');
+  line.style.color = color || '#888';
+  line.textContent = '[' + time + '] ' + msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+function setStatus(id, text, state, detail) {
+  const el = document.getElementById(id + '-status');
+  const det = document.getElementById(id + '-detail');
+  el.textContent = text;
+  el.className = 'status ' + (state || 'pending');
+  if (detail && det) det.textContent = detail;
+}
+
+async function runDiagnostic() {
+  log('Starting full diagnostic...', '#5BBFFF');
+
+  // Step 1: Check SDK
+  try {
+    if (typeof firebase !== 'undefined') {
+      setStatus('sdk', 'Firebase SDK loaded', 'ok', 'Version: ' + (firebase.SDK_VERSION || 'compat'));
+      log('SDK OK', '#00ff88');
+    } else {
+      setStatus('sdk', 'Firebase SDK MISSING', 'fail', 'Script failed to load');
+      log('SDK FAILED - script not loaded', '#ff4444');
+      return;
+    }
+  } catch(e) {
+    setStatus('sdk', 'SDK check failed', 'fail', e.message);
+    log('SDK error: ' + e.message, '#ff4444');
+    return;
+  }
+
+  // Step 2: Initialize
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(FB_CONFIG);
+    }
+    db = firebase.firestore();
+    setStatus('db', 'Firestore initialized', 'ok', 'Project: garrett-apps');
+    log('Firestore initialized OK', '#00ff88');
+  } catch(e) {
+    setStatus('db', 'Firestore init FAILED', 'fail', e.code + ': ' + e.message);
+    log('Firestore init error: ' + e.code + ' ' + e.message, '#ff4444');
+    return;
+  }
+
+  // Step 3: Write test
+  try {
+    setStatus('write', 'Writing...', 'pending');
+    log('Attempting write to users/garrett...', '#ffaa00');
+    await db.collection('users').doc('garrett').set({
+      diagnosticTest: true,
+      diagnosticTime: new Date().toISOString(),
+      deviceInfo: navigator.userAgent.substring(0, 100),
+      appVersion: 'v1.1.0'
+    }, { merge: true });
+    setStatus('write', 'Write SUCCEEDED', 'ok', 'Data written to users/garrett');
+    log('Write SUCCESS', '#00ff88');
+  } catch(e) {
+    setStatus('write', 'Write FAILED', 'fail', e.code + ': ' + e.message);
+    log('Write error: ' + e.code + ' - ' + e.message, '#ff4444');
+    log('This is likely a security rules issue', '#ffaa00');
+  }
+
+  // Step 4: Read test
+  try {
+    setStatus('read', 'Reading...', 'pending');
+    log('Attempting read from users/garrett...', '#ffaa00');
+    const doc = await db.collection('users').doc('garrett').get();
+    if (doc.exists) {
+      const data = doc.data();
+      setStatus('read', 'Read SUCCEEDED', 'ok', 'Document exists with ' + Object.keys(data).length + ' fields');
+      log('Read SUCCESS - ' + Object.keys(data).length + ' fields found', '#00ff88');
+
+      // Show current data
+      let dataStr = '';
+      Object.entries(data).forEach(([k, v]) => {
+        if (k !== 'rollingMemory' && k !== 'lastSummary') {
+          dataStr += k + ': ' + (typeof v === 'string' ? v.substring(0, 60) : v) + '\n';
+        } else {
+          dataStr += k + ': [' + (v ? v.length : 0) + ' chars]\n';
+        }
+      });
+      setStatus('data', 'Data loaded', 'ok', dataStr);
+      log('Current data fields: ' + Object.keys(data).join(', '), '#aaa');
+    } else {
+      setStatus('read', 'Read OK - no document yet', 'ok', 'Collection accessible, document does not exist yet');
+      setStatus('data', 'No data yet', 'pending', 'Document does not exist - buddy has not written yet');
+      log('Document does not exist yet', '#ffaa00');
+    }
+  } catch(e) {
+    setStatus('read', 'Read FAILED', 'fail', e.code + ': ' + e.message);
+    setStatus('data', 'Cannot read', 'fail', e.message);
+    log('Read error: ' + e.code + ' - ' + e.message, '#ff4444');
+  }
+
+  log('Diagnostic complete', '#5BBFFF');
+}
+
+async function writeTestData() {
+  if (!db) {
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+      db = firebase.firestore();
+    } catch(e) { log('Init failed: ' + e.message, '#ff4444'); return; }
+  }
+  try {
+    log('Writing test record...', '#ffaa00');
+    await db.collection('users').doc('garrett').set({
+      manualTest: true,
+      manualTestTime: new Date().toISOString(),
+      buddyName: 'Nova',
+      lastOpen: new Date().toISOString()
+    }, { merge: true });
+    log('Manual write SUCCESS - check Firestore now', '#00ff88');
+    alert('Write succeeded! Check Firestore console now for users/garrett document.');
+  } catch(e) {
+    log('Manual write FAILED: ' + e.code + ' ' + e.message, '#ff4444');
+    alert('Write failed: ' + e.code + '\n' + e.message);
+  }
+}
+
+async function readAllSessions() {
+  if (!db) {
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+      db = firebase.firestore();
+    } catch(e) { log('Init failed: ' + e.message, '#ff4444'); return; }
+  }
+  try {
+    log('Reading sessions...', '#ffaa00');
+    const snap = await db.collection('users').doc('garrett').collection('sessions').orderBy('date','desc').limit(10).get();
+    if (snap.empty) {
+      log('No sessions saved yet', '#ffaa00');
+      alert('No sessions found in Firebase yet.');
+    } else {
+      log('Found ' + snap.size + ' sessions:', '#00ff88');
+      snap.forEach(doc => {
+        const d = doc.data();
+        log('  ' + doc.id + ' - ' + (d.date || 'no date') + ' - ' + (d.emotionalArc || 'no emotion'), '#aaa');
+      });
+      alert('Found ' + snap.size + ' sessions. See log for details.');
+    }
+  } catch(e) {
+    log('Read sessions failed: ' + e.code + ' ' + e.message, '#ff4444');
+  }
+}
+
+async function clearTestData() {
+  if (!confirm('Clear test/diagnostic fields from Garrett data? Real session data will be kept.')) return;
+  if (!db) {
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+      db = firebase.firestore();
+    } catch(e) { log('Init failed: ' + e.message, '#ff4444'); return; }
+  }
+  try {
+    await db.collection('users').doc('garrett').update({
+      diagnosticTest: firebase.firestore.FieldValue.delete(),
+      diagnosticTime: firebase.firestore.FieldValue.delete(),
+      manualTest: firebase.firestore.FieldValue.delete(),
+      manualTestTime: firebase.firestore.FieldValue.delete(),
+      deviceInfo: firebase.firestore.FieldValue.delete()
+    });
+    log('Test fields cleared', '#00ff88');
+  } catch(e) {
+    log('Clear failed: ' + e.message, '#ffaa00');
+  }
+}
+
+// Auto-run on load
+window.addEventListener('load', function() {
+  log('Diagnostic page loaded', '#5BBFFF');
+  log('Tap "Run Full Diagnostic" to test Firebase connection', '#888');
+  setTimeout(runDiagnostic, 500);
+});
+</script>
+</body>
+</html>
