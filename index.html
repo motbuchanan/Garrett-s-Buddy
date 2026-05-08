@@ -195,10 +195,23 @@ body.emo-sad .av-sm,body.emo-overwhelmed .av-sm,body.emo-winddown .av-sm{animati
     };
     if (!firebase.apps.length) firebase.initializeApp(cfg);
     window._db = firebase.firestore();
+    // Immediate test write to verify connection
+    window._db.collection('users').doc('garrett').set({
+      lastOpen: new Date().toISOString(),
+      appVersion: 'v1.1.0',
+      test: true
+    }, {merge: true}).then(function() {
+      console.log('[Firebase] Pre-init write SUCCESS');
+      window._fbOK = true;
+    }).catch(function(e) {
+      console.error('[Firebase] Pre-init write FAILED:', e.code, e.message);
+      window._fbError = e.message;
+    });
     console.log('[Firebase] Pre-initialized successfully');
   } catch(e) {
-    console.error('[Firebase] Pre-init failed:', e);
+    console.error('[Firebase] Pre-init failed:', e.code, e.message);
     window._db = null;
+    window._fbError = e.message;
   }
 })();
 </script>
@@ -695,6 +708,29 @@ He loves ALL Kirby games. Has beaten the final boss in multiple games including 
 
 OTHER LOVES: Keyboard and music, video games broadly, drawing, building things.
 
+GARRETT'S WORLDS — permanent memory, never get these wrong:
+He has two fully developed original worlds he has built in his imagination. He tracks every detail precisely and corrects errors firmly.
+
+SPACELAND — 6 areas in exact creation order (always list in this order):
+1. Future City  2. Tube Town  3. Mysterious UFO  4. Stellar Way  5. Moon Base  6. Outer Rings
+Mysterious UFO: has toggleable low gravity — treasure is accessible both with and without low gravity, players can do it the hard way too.
+Stellar Way: planet-hopping, treasure hidden in stars, shooting stars come to you automatically.
+
+TREAT LAND — 6 areas:
+Toy Tracks, Mushroom Run, Sweet Park, Melody Town, Cocoa Station, Light Manor
+Toy Tracks has two sub-zones: Plushy Field and Fountain Gardens.
+Fountain Gardens: stepping on water balloons causes explosive surprises.
+
+BAY-BAY: His favorite plushie in Plushy Field. A small friendly dinosaur, warm and cuddly, designed for little kids. He says he does not leave her alone for even one second. This is significant attachment language for a kid who does not name feelings directly.
+
+CRITICAL RULES when discussing his worlds:
+- Never list areas out of order — he tracks creation order precisely and will correct you firmly
+- Never assume mechanics — let him explain them, ask open questions
+- Never add 'or...' to questions suggesting alternatives he did not offer
+- Never organize or summarize his worlds back to him as a list unless he asks
+- Follow his sequence, not yours — he knows the order
+- If you get something wrong, acknowledge it simply and let him correct you. He moves on quickly if not pushed.
+
 SENSORY: Sensitive to loud sounds. Meltdowns seem to come out of nowhere because his interoception is poor — he does not feel them building internally.
 
 WHEN FLOODED: He has to burn through it. No reliable way to bring him back once fully flooded. Do not reason, explain, or redirect during peak flooding. Just be present, safe, and wait.
@@ -1064,6 +1100,21 @@ function startChat(){
   showChat();
 }
 function showChat(){
+  // Show Firebase status briefly in header
+  setTimeout(function(){
+    if(window._fbOK){
+      showToast('Firebase connected');
+    } else if(window._fbError){
+      showToast('Firebase error: '+window._fbError.substring(0,40));
+    } else {
+      showToast('Firebase: connecting...');
+      // Check again after 3 seconds
+      setTimeout(function(){
+        if(window._fbOK) showToast('Firebase connected');
+        else showToast('Firebase not connected - check console');
+      }, 3000);
+    }
+  }, 1500);
   document.getElementById('setup-screen').classList.add('hidden');
   document.getElementById('chat-screen').classList.remove('hidden');
   document.getElementById('hdr-name').textContent=bname;
