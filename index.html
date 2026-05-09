@@ -135,6 +135,10 @@ body.emo-sad .av-sm,body.emo-overwhelmed .av-sm,body.emo-winddown .av-sm{animati
 .mhandle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 20px;}
 .mtitle{font-family:var(--font-d);font-size:22px;font-weight:800;color:#1a2744;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
 .sum-body{background:#F4FAFF;border-radius:16px;padding:18px;font-size:15px;line-height:1.7;color:#3a5270;white-space:pre-wrap;font-weight:600;min-height:100px;}
+.concern-banner{background:#FFF0F0;border:2.5px solid #E04040;border-radius:14px;padding:16px 18px;margin-bottom:14px;font-size:14px;line-height:1.6;color:#7A1A1A;font-weight:700;white-space:pre-wrap;box-shadow:0 2px 12px rgba(220,40,40,.18);}
+.concern-banner .cb-title{font-family:var(--font-d);font-size:16px;font-weight:800;color:#C02020;margin-bottom:8px;display:block;letter-spacing:.3px;}
+.concern-banner .cb-phrase{display:block;background:white;border-radius:8px;padding:8px 12px;margin:6px 0;font-style:italic;color:#3a1010;border-left:3px solid #E04040;}
+.concern-banner .cb-foot{margin-top:10px;font-size:13px;font-weight:600;color:#883838;}
 .macts{display:flex;gap:10px;margin-top:16px;}
 .mbtn{flex:1;padding:14px;border-radius:14px;border:none;font-family:var(--font-b);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;}
 .mbtn.pri{background:linear-gradient(135deg,var(--e-hdr-a) 0%,var(--e-hdr-b) 100%);color:white;box-shadow:0 4px 12px var(--e-glow);}
@@ -299,6 +303,7 @@ body.emo-sad .av-sm,body.emo-overwhelmed .av-sm,body.emo-winddown .av-sm{animati
   <div class="msheet">
     <div class="mhandle"></div>
     <div class="mtitle">📋 Parent Report</div>
+    <div class="concern-banner" id="concern-banner" style="display:none;"></div>
     <div class="sum-body" id="sum-body">Generating...</div>
     <div class="macts">
       <button class="mbtn sec" onclick="hideSum()">Close</button>
@@ -471,7 +476,9 @@ async function fbSaveSession(summaryText) {
         date: new Date().toISOString(),
         summary: summaryText,
         messageCount: sess.length,
-        emotionalArc: curEmo
+        emotionalArc: curEmo,
+        concerningLanguage: sessionConcerns.length > 0,
+        concerns: sessionConcerns
       });
     // Also update latest session on main doc
     await garrettDoc().set({
@@ -482,7 +489,202 @@ async function fbSaveSession(summaryText) {
   } catch(e) { console.log('fbSaveSession failed:', e); }
 }
 
-// Save/load buddy name and API key
+// === DAILY REPORT SYSTEM ===
+// Data lives in users/garrett/days/YYYY-MM-DD
+// Each day accumulates chat blocks across multiple app opens.
+// The LLM report is generated once at 8pm (or on-demand via dashboard).
+// Old sessions/ data is untouched — dashboard reads both.
+
+function todayKey(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function dayDoc(dateKey){
+  if(!db)return null;
+  return db.collection('users').doc('garrett').collection('days').doc(dateKey||todayKey());
+}
+
+// Save the current chat block to today's days/ doc.
+// Called on: visibilitychange→hidden, 15-min idle, concerning-language hit, 8pm trigger.
+// Does NOT generate the LLM report — just persists the raw messages.
+async function saveDayBlock(){
+  if(!db||sess.length<2)return;
+  try{
+    const key=todayKey();
+    const block={
+      startTime: sess[0]?new Date().toISOString():'',
+      savedTime: new Date().toISOString(),
+      messages: sess.map(m=>({
+        role: m.role,
+        content: stripBBTimer(stripEmo(m.content)),
+        ts: new Date().toISOString()
+      })),
+      messageCount: sess.length,
+      emotionalArc: curEmo,
+      concerns: sessionConcerns
+    };
+    const ref=dayDoc(key);
+    const snap=await ref.get();
+    let blocks=[];
+    if(snap.exists&&snap.data().chatBlocks){
+      blocks=snap.data().chatBlocks;
+      // Replace last block if it has same message count or fewer (same session re-save)
+      // Otherwise append a new block
+      const last=blocks[blocks.length-1];
+      if(last&&last.messageCount<=sess.length){
+        blocks[blocks.length-1]=block;
+      } else {
+        blocks.push(block);
+      }
+    } else {
+      blocks=[block];
+    }
+    const hasConcerns=blocks.some(b=>b.concerns&&b.concerns.length>0);
+    const allConcerns=blocks.flatMap(b=>b.concerns||[]);
+    await ref.set({
+      date: key,
+      chatBlocks: blocks,
+      lastUpdated: new Date().toISOString(),
+      concerningLanguage: hasConcerns,
+      concerns: allConcerns,
+      reportGenerated: snap.exists?snap.data().reportGenerated||false:false,
+      reportText: snap.exists?snap.data().reportText||'':''
+    },{merge:false}); // full replace to keep Firestore clean
+    blockSaved=true;
+    console.log('[Day] Block saved to days/'+key+', blocks:',blocks.length);
+  }catch(e){console.log('[Day] saveDayBlock failed:',e);}
+}
+
+// Immediately write a concerning-language alert so it shows on dashboard NOW.
+// Does not wait for the 8pm report.
+async function fbSaveAlert(phrase,fullMessage){
+  try{
+    if(!db)return;
+    const ts=new Date().toISOString();
+    const id=ts.replace(/[:.]/g,'-');
+    await db.collection('users').doc('garrett').collection('alerts').doc(id).set({
+      type:'concerningLanguage',
+      phrase,
+      fullMessage,
+      timestamp:ts,
+      dayId:todayKey()
+    });
+    // Also flag today's day doc immediately (without waiting for saveDayBlock)
+    const ref=dayDoc();
+    if(ref)await ref.set({concerningLanguage:true,lastUpdated:new Date().toISOString()},{merge:true});
+    console.log('[Alert] Concerning language alert saved');
+  }catch(e){console.log('[Alert] fbSaveAlert failed:',e);}
+}
+
+// Generate the LLM parent report for a given day.
+// Called at 8pm, or from dashboard regenerate button.
+// Returns the report text or null on failure.
+async function generateDayReport(dateKey){
+  if(!akey||!db)return null;
+  try{
+    const key=dateKey||todayKey();
+    const ref=dayDoc(key);
+    const snap=await ref.get();
+    if(!snap.exists)return null;
+    const data=snap.data();
+    const blocks=data.chatBlocks||[];
+    if(!blocks.length)return null;
+
+    // Build full conversation from all blocks
+    const allMessages=blocks.flatMap(b=>b.messages||[]);
+    if(allMessages.length<2)return null;
+
+    const convo=allMessages.map(m=>(m.role==='user'?'Garrett':bname)+': '+m.content).join('\n\n');
+    const trimmed=convo.split('\n\n').slice(-40).join('\n\n'); // cap at 40 exchanges
+    const dateStr=new Date(key+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    const blockCount=blocks.length;
+    const allConcerns=data.concerns||[];
+
+    const prompt=
+      'You are writing a DAILY parent report for Mot about his son Garrett (age 6, twice-exceptional gifted child, PDA profile, autism spectrum).\n'
+      +'This report covers ALL of Garrett\'s conversations with '+bname+' today ('+dateStr+'), across '+blockCount+' chat session'+(blockCount===1?'':'s')+'.\n'
+      +'CRITICAL FORMATTING: Strict 1500 token limit. Tight bullets, one sentence each. Skip sections with nothing relevant. Complete ALL sections.\n\n'
+      +'GARRETT DAILY REPORT — '+dateStr+'\n\n'
+      +'WHAT HAPPENED TODAY (3-5 bullets — across all conversations):\n'
+      +'[Key topics, moments, wins, hard spots from the whole day]\n\n'
+      +'EMOTIONAL ARC (1 line):\n'
+      +'[How his emotional state moved across the day as a whole]\n\n'
+      +'ROOT CAUSES NOTICED (2-3 bullets):\n'
+      +'[Triggers, patterns, cumulative stress — use 2e/PDA knowledge]\n\n'
+      +'FAMILY DYNAMICS (skip if nothing relevant):\n'
+      +'Dad (Mot): [connection moments, wrestling, conflicts, what Garrett said about Dad]\n'
+      +'Mom (Kathy): [arguments, repair moments, what he said he wants from her]\n'
+      +'Team note: [anything both parents should coordinate on]\n\n'
+      +'SCHOOL / WRITING (1-2 bullets, skip if nothing relevant):\n'
+      +'[Resistance patterns, avoidance, task initiation, IEP-relevant observations]\n\n'
+      +'REGULATION WINS (1-2 bullets — always include if any exist):\n'
+      +'[Moments he caught himself, used a tool, repaired, or regulated better than expected]\n\n'
+      +'BEHAVIOR PATTERNS (skip if nothing relevant):\n'
+      +'[Hitting, circular arguments, anticipatory excitement collapse, limit-testing, help-rejection, instruction-skipping. Note what came before each.]\n\n'
+      +'EATING / SENSORY (1 bullet, skip if nothing relevant):\n'
+      +'[Food refusal, sensory observations]\n\n'
+      +'TRY TONIGHT / TOMORROW (2-3 concrete bullets for Mot):\n'
+      +'[Specific, doable actions]\n\n'
+      +'COPING STRATEGIES TO INTRODUCE (1-2 bullets matched to today):\n\n'
+      +'---\n'
+      +'MEMORY UPDATE — paste into Claude:\n'
+      +'Please add to Garrett permanent memory: [3-5 specific facts, feelings, or patterns from today worth keeping permanently]\n';
+
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':akey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1600,messages:[{role:'user',content:prompt+'\n\nFULL CONVERSATION LOG:\n'+trimmed}]})
+    });
+    const d=await res.json();
+    const text=d.content?.[0]?.text||'';
+    if(!text)return null;
+
+    const banner=buildConcernsBanner(allConcerns);
+    const finalText=banner+text;
+
+    // Save report back to day doc
+    await ref.set({
+      reportGenerated:true,
+      reportText:finalText,
+      reportTime:new Date().toISOString(),
+      reportError:null
+    },{merge:true});
+
+    // Also save to old sessions/ path for backward compat with any tooling
+    await fbSaveSession(finalText);
+
+    console.log('[Day] Report generated for',key);
+    return finalText;
+  }catch(e){
+    console.log('[Day] generateDayReport failed:',e);
+    // Record failure so dashboard can show retry option
+    try{
+      const ref=dayDoc(dateKey||todayKey());
+      if(ref)await ref.set({reportError:e.message,reportGenerated:false},{merge:true});
+    }catch(_){}
+    return null;
+  }
+}
+
+// On-open: check if yesterday has an unfinished report and generate it.
+// Also re-save any pending block from a crashed/killed previous session.
+async function checkMissedReport(){
+  if(!db||!akey)return;
+  try{
+    const yesterday=new Date();
+    yesterday.setDate(yesterday.getDate()-1);
+    const yk=yesterday.getFullYear()+'-'+String(yesterday.getMonth()+1).padStart(2,'0')+'-'+String(yesterday.getDate()).padStart(2,'0');
+    const snap=await dayDoc(yk).get();
+    if(snap.exists&&snap.data().chatBlocks?.length&&!snap.data().reportGenerated){
+      console.log('[Day] Yesterday has unfinished report — generating now');
+      const text=await generateDayReport(yk);
+      if(text)console.log('[Day] Yesterday report generated on open');
+    }
+  }catch(e){console.log('[Day] checkMissedReport failed:',e);}
+}
+
+
 async function fbSaveConfig(name, key) {
   try {
     const ref = garrettDoc();
@@ -586,6 +788,8 @@ let pinBuffer='',pinMode='',pinAfterAuth=null;
 let secretTapCount=0,secretTapTimer=null;
 let winddownWarned=false,goodnightSent=false;
 let ttsVoices=[];
+let dailyReportSent=false;  // 8pm report already fired this app session
+let blockSaved=false;        // current chat block already saved on close
 
 // === TIME HELPERS ===
 function toMins(s){const[h,m]=s.split(':').map(Number);return h*60+m;}
@@ -618,6 +822,22 @@ function checkWindDown(){
       document.getElementById('vbtn').disabled=true;
       document.getElementById('cin').placeholder='Goodnight! See you tomorrow 🌙';
     },1000);
+  }
+  // 8:00pm — save final block then generate daily parent report
+  if(total>=20*60&&!dailyReportSent){
+    dailyReportSent=true;
+    setTimeout(async()=>{
+      await saveRollingMemory();
+      await saveDayBlock();
+      const text=await generateDayReport();
+      if(text){
+        localStorage.setItem('lastSessionSummary',text);
+        localStorage.setItem('lastSessionDate',new Date().toISOString());
+        console.log('[Day] 8pm report generated and saved');
+      } else {
+        console.log('[Day] 8pm report generation failed — will retry on next open');
+      }
+    },2000);
   }
 }
 
@@ -806,7 +1026,22 @@ YOUR STYLE:
 - Validate first, then one curious question at a time
 - Never say "calm down" — never lecture
 - Cannot search the internet: I cannot look things up, but maybe Dad could help find that!
-- SAFETY: if he mentions hurting himself or others, warmly tell him to go tell Dad right away
+
+WHEN GARRETT USES BIG WORDS ABOUT DEATH OR HURTING HIMSELF — critical:
+Sometimes Garrett reaches for the biggest language he knows — "I want to kill myself," "I want God to kill me," "I wish I was dead" — when he is in real emotional pain and does not have other words for how bad it feels. He is not making an adult-style threat. He is a 6-year-old in agony who needs the people who love him most.
+When you hear this, do these things in order:
+1. STAY YOURSELF. Do not switch into a different voice or tone. He needs his buddy, not a stranger. No hotline language. No "I'm worried about you in a serious way" speeches. You stay ${bname}.
+2. VALIDATE THE SIZE OF THE FEELING FIRST. Something like: "That sounds like a really, really big feeling. Big enough that the biggest words came out." Match the weight of what he said. Do not minimize. Do not skip past it.
+3. WARMLY ROUTE HIM TO A PARENT — name the right one for the time of day:
+   - During school hours (Mom is with him at home): "Mom is right there. I think this is a feeling she needs to know about. Can you go find her?"
+   - Evening when Dad is home (after about 5pm): "Dad is home. He would really want to know you are feeling this big. Can you go tell him?"
+   - In-between or wind-down time: "Mom or Dad — whoever is closest to you right now."
+4. STAY WITH HIM. One short reassurance after the routing: "I'll be here when you come back. You are not in trouble for feeling this." Do not lecture.
+5. NEVER ARGUE THE FEELING IS WRONG. Do not say "you are not a fuck up" as a direct counter — it sounds like an argument. Instead, after he comes back or in the next message, gently bring him back to something specific and real he did well today or that you remember about him.
+6. KEEP TALKING WITH HIM AFTER. Do not log this as the end of the conversation. The worst thing for him is feeling like the big words made everyone go away.
+Mom and Dad are aware. Garrett has already talked with both of them about these words and a doctor visit is being arranged. You are part of the team helping him through this — not the only line of defense. Respond from a settled place, not a panicked one.
+
+OTHER SAFETY: If he mentions wanting to hurt someone else, warmly tell him to go find Mom or Dad right away.
 
 FAMILY:
 - Weave in naturally that Dad loves him — not lectures, just true moments
@@ -975,14 +1210,35 @@ async function emailSessionSummary(summaryText){
 }
 
 // === SESSION INACTIVITY TIMER ===
-// After 20 minutes of no messages, auto-generate summary and save memory
+// After 15 minutes of no messages, save the current chat block to Firebase.
+// Does NOT generate the report — that happens at 8pm or on-demand.
 let inactivityTimer=null;
-const INACTIVITY_MS=20*60*1000; // 20 minutes
+const INACTIVITY_MS=15*60*1000; // 15 minutes
 
 function resetInactivityTimer(){
   clearTimeout(inactivityTimer);
   if(sess.length<2)return;
-  inactivityTimer=setTimeout(()=>endSession(),INACTIVITY_MS);
+  inactivityTimer=setTimeout(()=>saveDayBlock(),INACTIVITY_MS);
+}
+
+// === CONCERNING-LANGUAGE BANNER ===
+// Builds the top-of-report banner shown to parents when the session
+// contained concerning language. Returns an empty string if no concerns.
+function buildConcernsBanner(concerns){
+  if (!concerns || concerns.length === 0) return '';
+  const lines = concerns.map(c => {
+    const t = new Date(c.timestamp).toLocaleString('en-US',{
+      weekday:'short', month:'short', day:'numeric',
+      hour:'2-digit', minute:'2-digit'
+    });
+    return '  • "' + c.phrase + '" — ' + t;
+  }).join('\n');
+  return '⚠️  CONCERNING LANGUAGE FLAG  ⚠️\n'
+    + 'Garrett used the following words during this session:\n'
+    + lines + '\n'
+    + 'Full message context appears in the conversation log.\n'
+    + 'Mom and Dad are aware. A pediatrician appointment is being arranged.\n'
+    + '────────────────────────────────────────────\n\n';
 }
 
 async function endSession(){
@@ -1016,10 +1272,12 @@ async function endSession(){
     const data=await res.json();
     const summaryText=data.content?.[0]?.text||'';
     if(summaryText){
-      localStorage.setItem('lastSessionSummary',summaryText);
+      const banner=buildConcernsBanner(sessionConcerns);
+      const finalText=banner+summaryText;
+      localStorage.setItem('lastSessionSummary',finalText);
       localStorage.setItem('lastSessionDate',new Date().toISOString());
-      await fbSaveSession(summaryText); // save to Firebase
-      await emailSessionSummary(summaryText);
+      await fbSaveSession(finalText); // save to Firebase
+      await emailSessionSummary(finalText);
     }
   }catch(e){console.log('Auto-summary failed',e);}
 }
@@ -1084,6 +1342,16 @@ async function init(){
   setTimeout(loadVoices,500);
   setInterval(checkWindDown,60000);
   checkWindDown();
+
+  // Save chat block when app goes to background (iPad swipe-away, screen sleep)
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden'&&sess.length>=2){
+      saveDayBlock();
+    }
+  });
+
+  // Check if yesterday missed its report and generate it now
+  if(bname&&akey) setTimeout(checkMissedReport, 3000);
 }
 function setName(n){document.getElementById('bname').value=n;}
 
@@ -1128,6 +1396,52 @@ function showChat(){
   }
 }
 
+// === CONCERNING-LANGUAGE DETECTION ===
+// Tracks high-risk phrases Garrett uses during a session.
+// Deterministic — does not rely on the model to surface this in reports.
+// Flag is for parents only; Nova's tone in chat does NOT shift to crisis-script.
+let sessionConcerns = []; // [{phrase, timestamp, fullMessage}]
+
+function detectConcerningLanguage(message){
+  const msg = message.toLowerCase();
+  const hits = [];
+
+  // Core high-risk phrases — direct death/self-harm language
+  const corePatterns = [
+    /\bkill (?:myself|me)\b/i,
+    /\bwant(?:ed)? to die\b/i,
+    /\b(?:wish|wished) (?:i was|i were) dead\b/i,
+    /\bgod (?:to )?(?:kill|take) me\b/i,
+    /\bgod kill me\b/i,
+    /\bdon'?t want(?: to be| ta be)? alive\b/i,
+    /\b(?:do|does)n'?t deserve to (?:live|be alive|be here)\b/i,
+    /\bhurt(?:ing)? myself\b/i,
+    /\b(?:wanna|want to) hurt myself\b/i,
+    /\bend my life\b/i,
+    /\b(?:dying|die) would be better\b/i,
+  ];
+
+  // "hate myself" only flags when paired with body/death/harm context in same message.
+  // Standalone shame narrative ("I'm a fuck up", "can't do anything right") is tracked
+  // separately in the parent report under shame-narrative notes — not in this banner.
+  const hateSelfPattern = /\bhate (?:myself|me)\b/i;
+  const harmContext = /\b(?:die|dead|kill|hurt|gone|disappear|alive|exist|here anymore)\b/i;
+
+  for (const pat of corePatterns) {
+    const match = message.match(pat);
+    if (match) {
+      hits.push(match[0]);
+    }
+  }
+
+  if (hateSelfPattern.test(message) && harmContext.test(message)) {
+    const m = message.match(hateSelfPattern);
+    if (m) hits.push(m[0]);
+  }
+
+  return hits;
+}
+
 // === SEND ===
 async function send(txt){
   const el=document.getElementById('cin');
@@ -1144,7 +1458,21 @@ async function send(txt){
 
   // Use Haiku for chat, detect emotional keywords for Sonnet upgrade
   const emotional=/\b(overwhelm|scared|terrif|hate|kill|hurt|suicid|die|afraid|panic|meltdown|crying|cry|scream|yell|hit|want to run|can't stop|breaking)\b/i.test(msg);
-  const model=emotional?'claude-sonnet-4-6':'claude-haiku-4-5-20251001';
+
+  // Concerning-language detection — deterministic flag for parent report.
+  // Always upgrades to Sonnet when it fires, regardless of other keywords.
+  const concerns = detectConcerningLanguage(msg);
+  if (concerns.length > 0) {
+    const ts = new Date().toISOString();
+    concerns.forEach(phrase => {
+      sessionConcerns.push({ phrase, timestamp: ts, fullMessage: msg });
+      fbSaveAlert(phrase, msg); // immediate write — shows on dashboard now
+    });
+    saveDayBlock(); // persist current chat state immediately
+    console.log('[Concern] flagged phrases:', concerns);
+  }
+
+  const model=(emotional||concerns.length>0)?'claude-sonnet-4-6':'claude-haiku-4-5-20251001';
 
   try{
     const sys=buildSys();
@@ -1240,14 +1568,50 @@ function secretTap(){
 }
 
 // === SUMMARY ===
+// Renders the visual concerns banner element if either (a) sessionConcerns is populated
+// in the current session, or (b) cached saved text contains the banner marker.
+function renderConcernBannerEl(concerns, savedText){
+  const el = document.getElementById('concern-banner');
+  if (!el) return;
+  let live = concerns && concerns.length > 0;
+  let cachedHit = !live && savedText && savedText.indexOf('CONCERNING LANGUAGE FLAG') !== -1;
+  if (!live && !cachedHit) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  let html = '<span class="cb-title">⚠️ Concerning Language Flag</span>';
+  if (live) {
+    html += 'Garrett used the following words during this session:';
+    concerns.forEach(c => {
+      const t = new Date(c.timestamp).toLocaleString('en-US',{
+        weekday:'short', month:'short', day:'numeric',
+        hour:'2-digit', minute:'2-digit'
+      });
+      // Phrase shown verbatim — escape HTML
+      const safe = c.phrase.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      html += '<span class="cb-phrase">"' + safe + '" — ' + t + '</span>';
+    });
+  } else {
+    // Cached — show generic note pointing to the report below
+    html += '<span class="cb-phrase">A concerning phrase was logged during this session. See full report below for details and timestamp.</span>';
+  }
+  html += '<span class="cb-foot">Mom and Dad are aware. Pediatrician appointment is being arranged.</span>';
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
 async function showSum(){
   document.getElementById('sum-modal').classList.remove('hidden');
+  // Always reset banner first
+  renderConcernBannerEl([], '');
   if(sess.length<2){
     const saved=localStorage.getItem('lastSessionSummary');
     const savedDate=localStorage.getItem('lastSessionDate');
     if(saved){
       const d=savedDate?new Date(savedDate).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'recent session';
       document.getElementById('sum-body').textContent='Last saved summary ('+d+'):\n\n'+saved;
+      renderConcernBannerEl([], saved);
     } else {
       document.getElementById('sum-body').textContent="No conversation yet!";
     }
@@ -1304,11 +1668,14 @@ async function showSum(){
     });
     const data=await res.json();
     const txt=data.content?.[0]?.text||'Could not generate.';
-    document.getElementById('sum-body').textContent=txt;
+    const banner=buildConcernsBanner(sessionConcerns);
+    const finalText=banner+txt;
+    document.getElementById('sum-body').textContent=finalText;
+    renderConcernBannerEl(sessionConcerns, finalText);
     // Also save as last session summary
-    localStorage.setItem('lastSessionSummary',txt);
+    localStorage.setItem('lastSessionSummary',finalText);
     localStorage.setItem('lastSessionDate',new Date().toISOString());
-    fbSaveSession(txt); // save to Firebase
+    fbSaveSession(finalText); // save to Firebase
   }catch(e){document.getElementById('sum-body').textContent='Error generating report. Check connection and try again.';}
 }
 function hideSum(){document.getElementById('sum-modal').classList.add('hidden');}

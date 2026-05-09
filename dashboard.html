@@ -83,6 +83,14 @@ body{overflow-y:auto;}
 
 .back-btn{display:flex;align-items:center;gap:8px;background:white;border:none;border-radius:14px;padding:12px 18px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;color:#3a5270;cursor:pointer;margin-bottom:20px;box-shadow:0 2px 8px rgba(30,80,140,.08);}
 
+/* CONCERN BANNERS */
+.concern-banner{background:#FFF0F0;border:2.5px solid #E04040;border-radius:14px;padding:16px 18px;margin-bottom:18px;font-size:14px;line-height:1.6;color:#7A1A1A;font-weight:700;white-space:pre-wrap;box-shadow:0 3px 14px rgba(220,40,40,.18);}
+.concern-banner .cb-title{font-family:'Baloo 2',cursive;font-size:17px;font-weight:800;color:#C02020;margin-bottom:8px;display:block;letter-spacing:.3px;}
+.concern-banner .cb-phrase{display:block;background:white;border-radius:8px;padding:8px 12px;margin:6px 0;font-style:italic;color:#3a1010;border-left:3px solid #E04040;}
+.concern-banner .cb-foot{margin-top:10px;font-size:13px;font-weight:600;color:#883838;}
+.concern-banner .cb-link{margin-top:10px;display:inline-block;color:#C02020;font-weight:800;font-size:13px;text-decoration:underline;cursor:pointer;}
+.concern-pill{display:inline-flex;align-items:center;gap:5px;background:#FFE4E4;color:#C02020;padding:4px 10px;border-radius:30px;font-size:11px;font-weight:800;margin-left:8px;border:1.5px solid #E04040;}
+
 @supports(padding-bottom:env(safe-area-inset-bottom)){
   #dash{padding-bottom:calc(60px + env(safe-area-inset-bottom));}
 }
@@ -130,6 +138,9 @@ body{overflow-y:auto;}
     </div>
   </div>
 
+  <!-- TOP-LEVEL CONCERN ALERT -->
+  <div id="top-concern-alert" style="display:none;"></div>
+
   <!-- TREND -->
   <div class="section-title">📈 Emotional Trend (Last 10 Sessions)</div>
   <div class="trend-wrap">
@@ -171,7 +182,6 @@ function initFB() {
   } catch(e) { console.log('FB init failed', e); }
 }
 
-// Emotion colors and emoji
 const EMO_STYLE = {
   happy:       {color:'#FFD93D', emoji:'😄'},
   excited:     {color:'#FF6EB0', emoji:'🤩'},
@@ -187,11 +197,9 @@ const EMO_STYLE = {
 // PIN
 let pinBuf = '';
 const parentPin = localStorage.getItem('parentPin') || '1234';
-
 function pk(d) {
   if (pinBuf.length >= 4) return;
-  pinBuf += d;
-  updDots();
+  pinBuf += d; updDots();
   if (pinBuf.length === 4) {
     setTimeout(() => {
       if (pinBuf === parentPin) {
@@ -205,20 +213,12 @@ function pk(d) {
     }, 200);
   }
 }
-function pd() {
-  pinBuf = pinBuf.slice(0, -1);
-  updDots();
-  document.getElementById('pin-err').textContent = '';
-}
-function updDots() {
-  for (let i = 0; i < 4; i++) {
-    document.getElementById('d' + i).classList.toggle('filled', i < pinBuf.length);
-  }
-}
+function pd() { pinBuf = pinBuf.slice(0, -1); updDots(); document.getElementById('pin-err').textContent = ''; }
+function updDots() { for (let i = 0; i < 4; i++) document.getElementById('d' + i).classList.toggle('filled', i < pinBuf.length); }
 
-// Load dashboard
+// === LOAD DASHBOARD ===
 async function loadDashboard() {
-  await Promise.all([loadMemory(), loadSessions()]);
+  await Promise.all([loadMemory(), loadAllReports()]);
 }
 
 async function loadMemory() {
@@ -234,128 +234,325 @@ async function loadMemory() {
     } else {
       document.getElementById('memory-text').textContent = 'No memory saved yet. Memory builds after a few sessions.';
     }
-  } catch(e) {
-    document.getElementById('memory-text').textContent = 'Could not load memory.';
-  }
+  } catch(e) { document.getElementById('memory-text').textContent = 'Could not load memory.'; }
 }
 
-async function loadSessions() {
+// === LOAD ALL REPORTS ===
+// Reads from three collections: days/ (new), alerts/ (immediate concerns), sessions/ (legacy).
+// Merges and displays chronologically with clear labeling.
+async function loadAllReports() {
+  const listEl = document.getElementById('sessions-list');
+  const topAlert = document.getElementById('top-concern-alert');
+  listEl.innerHTML = '<div class="loading">Loading reports...</div>';
+
+  if (!db) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">📡</div><div class="empty-text">Firebase not connected.</div></div>';
+    return;
+  }
+
   try {
-    if (!db) {
-      document.getElementById('sessions-list').innerHTML = '<div class="empty"><div class="empty-icon">📡</div><div class="empty-text">Firebase not connected.</div></div>';
-      return;
+    // Fetch all three collections in parallel
+    const [daysSnap, alertsSnap, sessionsSnap] = await Promise.all([
+      db.collection('users').doc('garrett').collection('days').orderBy('date','desc').limit(30).get(),
+      db.collection('users').doc('garrett').collection('alerts').orderBy('timestamp','desc').limit(20).get(),
+      db.collection('users').doc('garrett').collection('sessions').orderBy('date','desc').limit(30).get()
+    ]);
+
+    // --- IMMEDIATE CONCERN ALERTS ---
+    // Show at very top if any alerts exist from the last 48 hours
+    const now = Date.now();
+    const recentAlerts = [];
+    alertsSnap.forEach(doc => {
+      const a = doc.data();
+      if (new Date(a.timestamp).getTime() > now - 48*60*60*1000) recentAlerts.push(a);
+    });
+
+    if (recentAlerts.length > 0) {
+      const safe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const phraseLines = recentAlerts.map(a => {
+        const t = a.timestamp ? new Date(a.timestamp).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+        return '<span class="cb-phrase">"' + safe(a.phrase) + '" — ' + t + '</span>';
+      }).join('');
+      topAlert.className = 'concern-banner';
+      topAlert.innerHTML =
+        '<span class="cb-title">⚠️ Concerning Language — Last 48 Hours</span>' +
+        phraseLines +
+        '<span class="cb-foot">Mom and Dad are aware. Pediatrician appointment is being arranged.</span>';
+      topAlert.style.display = 'block';
+    } else {
+      topAlert.style.display = 'none';
     }
-    const snap = await db.collection('users').doc('garrett').collection('sessions')
-      .orderBy('date', 'desc').limit(30).get();
 
-    if (snap.empty) {
-      document.getElementById('sessions-list').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No sessions saved yet.<br>Reports appear here after sessions.</div></div>';
-      return;
-    }
+    // --- BUILD CARDS ---
+    const days = [];
+    daysSnap.forEach(doc => days.push({type:'day', id:doc.id, ...doc.data()}));
 
-    const sessions = [];
-    snap.forEach(doc => sessions.push({id: doc.id, ...doc.data()}));
+    const legacySessions = [];
+    // Only show legacy sessions that don't have a matching day entry
+    const dayIds = new Set(days.map(d => d.date));
+    sessionsSnap.forEach(doc => {
+      const s = doc.data();
+      const dayKey = s.date ? s.date.substring(0,10) : '';
+      if (!dayIds.has(dayKey)) legacySessions.push({type:'session', id:doc.id, ...s});
+    });
 
-    // Stats
-    document.getElementById('stat-sessions').textContent = sessions.length;
+    // Stats — use all available data
+    const allDates = [...days.map(d=>d.date), ...legacySessions.map(s=>s.date?s.date.substring(0,10):'')].filter(Boolean);
+    document.getElementById('stat-sessions').textContent = days.length + legacySessions.length;
 
-    // Streak
+    // Streak (days in a row with at least one entry)
+    const uniqueDates = [...new Set(allDates)].sort().reverse();
     let streak = 0;
-    const today = new Date().toDateString();
-    const dates = [...new Set(sessions.map(s => new Date(s.date).toDateString()))];
-    for (let i = 0; i < dates.length; i++) {
-      const d = new Date(dates[i]);
-      const expected = new Date();
-      expected.setDate(expected.getDate() - i);
-      if (d.toDateString() === expected.toDateString()) streak++;
-      else break;
+    for (let i = 0; i < uniqueDates.length; i++) {
+      const expected = new Date(); expected.setDate(expected.getDate() - i);
+      const exp = expected.toISOString().substring(0,10);
+      if (uniqueDates[i] === exp) streak++; else break;
     }
     document.getElementById('stat-streak').textContent = streak + 'd';
 
-    // Top emotion
+    // Top emotion from days
     const emoCounts = {};
-    sessions.forEach(s => {
-      if (s.emotionalArc) emoCounts[s.emotionalArc] = (emoCounts[s.emotionalArc] || 0) + 1;
+    days.forEach(d => {
+      const emo = (d.chatBlocks||[]).map(b=>b.emotionalArc).filter(Boolean).pop() || 'calm';
+      emoCounts[emo] = (emoCounts[emo]||0) + 1;
     });
-    const topEmo = Object.entries(emoCounts).sort((a,b) => b[1]-a[1])[0];
-    document.getElementById('stat-topemo').textContent = topEmo ? (EMO_STYLE[topEmo[0]]?.emoji || '😊') : '😊';
+    const topEmo = Object.entries(emoCounts).sort((a,b)=>b[1]-a[1])[0];
+    document.getElementById('stat-topemo').textContent = topEmo ? (EMO_STYLE[topEmo[0]]?.emoji||'😊') : '😊';
 
-    // Trend bars
-    const recent = sessions.slice(0, 10).reverse();
+    // Trend bars from recent days
     const barsEl = document.getElementById('trend-bars');
     const legendEl = document.getElementById('trend-legend');
     barsEl.innerHTML = '';
-    const maxCount = Math.max(...Object.values(emoCounts), 1);
+    const recentDays = days.slice(0,10).reverse();
     const seen = new Set();
-    recent.forEach((s, i) => {
-      const emo = s.emotionalArc || 'calm';
-      const style = EMO_STYLE[emo] || EMO_STYLE.calm;
-      const bar = document.createElement('div');
-      bar.className = 'trend-bar';
-      bar.style.background = style.color;
-      bar.style.height = '40px';
-      bar.title = emo;
-      const lbl = document.createElement('div');
-      lbl.className = 'trend-bar-lbl';
-      lbl.textContent = style.emoji;
-      const wrap = document.createElement('div');
-      wrap.style.flex = '1';
-      wrap.style.display = 'flex';
-      wrap.style.flexDirection = 'column';
-      wrap.style.alignItems = 'center';
-      wrap.appendChild(bar);
-      wrap.appendChild(lbl);
-      barsEl.appendChild(wrap);
-      if (!seen.has(emo)) {
-        seen.add(emo);
-        const li = document.createElement('div');
-        li.className = 'legend-item';
-        li.innerHTML = '<div class="legend-dot" style="background:' + style.color + '"></div>' + emo;
-        legendEl.appendChild(li);
-      }
-    });
+    if (recentDays.length === 0) {
+      barsEl.innerHTML = '<div style="color:#adc5d8;font-size:13px;font-weight:700;">No daily data yet</div>';
+    } else {
+      recentDays.forEach(d => {
+        const emo = (d.chatBlocks||[]).map(b=>b.emotionalArc).filter(Boolean).pop() || 'calm';
+        const style = EMO_STYLE[emo] || EMO_STYLE.calm;
+        const bar = document.createElement('div'); bar.className='trend-bar'; bar.style.background=style.color; bar.style.height='40px'; bar.title=emo;
+        const lbl = document.createElement('div'); lbl.className='trend-bar-lbl'; lbl.textContent=style.emoji;
+        const wrap = document.createElement('div'); wrap.style.cssText='flex:1;display:flex;flex-direction:column;align-items:center;';
+        wrap.appendChild(bar); wrap.appendChild(lbl); barsEl.appendChild(wrap);
+        if (!seen.has(emo)) { seen.add(emo); const li=document.createElement('div'); li.className='legend-item'; li.innerHTML='<div class="legend-dot" style="background:'+style.color+'"></div>'+emo; legendEl.appendChild(li); }
+      });
+    }
 
-    // Session cards
-    const listEl = document.getElementById('sessions-list');
+    // --- RENDER CARDS ---
     listEl.innerHTML = '';
-    sessions.forEach(s => {
-      const emo = s.emotionalArc || 'calm';
-      const style = EMO_STYLE[emo] || EMO_STYLE.calm;
-      const date = new Date(s.date);
-      const dateStr = date.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'});
-      const timeStr = date.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
 
-      // Extract emotional arc line from summary
-      let arc = '';
-      if (s.summary) {
-        const arcMatch = s.summary.match(/EMOTIONAL ARC[^\n]*\n([^\n]+)/);
-        if (arcMatch) arc = arcMatch[1].trim();
-      }
+    if (days.length === 0 && legacySessions.length === 0) {
+      listEl.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No reports yet.<br>Reports appear here automatically each evening.</div></div>';
+      return;
+    }
 
-      const card = document.createElement('div');
-      card.className = 'session-card';
-      card.innerHTML =
-        '<div class="session-top">' +
-          '<div class="session-emo">' + style.emoji + '</div>' +
-          '<div class="session-info">' +
-            '<div class="session-date">' + dateStr + '</div>' +
-            '<div class="session-meta">' + timeStr + (s.messageCount ? ' · ' + s.messageCount + ' messages' : '') + '</div>' +
-          '</div>' +
-        '</div>' +
-        (arc ? '<div class="session-arc">' + arc + '</div>' : '') +
-        '<div class="session-report">' + (s.summary || 'No report saved.') + '</div>' +
-        '<div class="session-actions" style="display:none;">' +
-          '<button class="sact-btn sec" onclick="collapseCard(this)">Close</button>' +
-          '<button class="sact-btn pri" onclick="copyReport(this)">Copy 📋</button>' +
-        '</div>';
+    // New daily report cards
+    days.forEach(d => renderDayCard(d, listEl));
 
-      card.querySelector('.session-top').addEventListener('click', () => toggleCard(card));
-      listEl.appendChild(card);
-    });
+    // Legacy session cards (with label)
+    if (legacySessions.length > 0) {
+      const sep = document.createElement('div');
+      sep.className = 'section-title';
+      sep.style.marginTop = '24px';
+      sep.innerHTML = '📁 Previous Sessions';
+      listEl.appendChild(sep);
+      legacySessions.forEach(s => renderSessionCard(s, listEl));
+    }
 
   } catch(e) {
-    console.log('loadSessions error:', e);
-    document.getElementById('sessions-list').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error loading sessions.<br>' + e.message + '</div></div>';
+    console.log('loadAllReports error:', e);
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error loading reports.<br>' + e.message + '</div></div>';
+  }
+}
+
+// === RENDER DAILY REPORT CARD ===
+function renderDayCard(d, listEl) {
+  const safe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const dateObj = new Date(d.date + 'T12:00:00');
+  const dateStr = dateObj.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+  const blocks = d.chatBlocks || [];
+  const blockCount = blocks.length;
+  const msgCount = blocks.reduce((n,b)=>n+(b.messageCount||0), 0);
+  const lastEmo = blocks.map(b=>b.emotionalArc).filter(Boolean).pop() || 'calm';
+  const style = EMO_STYLE[lastEmo] || EMO_STYLE.calm;
+  const isFlagged = d.concerningLanguage;
+  const concerns = d.concerns || [];
+  const hasReport = d.reportGenerated && d.reportText;
+  const hasError = d.reportError && !d.reportGenerated;
+
+  // Concern banner markup
+  let bannerHtml = '';
+  if (isFlagged && concerns.length > 0) {
+    const phraseLines = concerns.map(c => {
+      const t = c.timestamp ? new Date(c.timestamp).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      return '<span class="cb-phrase">"' + safe(c.phrase) + '" — ' + t + '</span>';
+    }).join('');
+    bannerHtml = '<div class="concern-banner" style="margin:12px 0 0;">' +
+      '<span class="cb-title">⚠️ Concerning Language</span>' + phraseLines +
+      '<span class="cb-foot">Mom and Dad are aware. Pediatrician appointment is being arranged.</span>' +
+      '</div>';
+  } else if (isFlagged) {
+    bannerHtml = '<div class="concern-banner" style="margin:12px 0 0;"><span class="cb-title">⚠️ Concerning Language Flagged</span><span class="cb-foot">See report for details.</span></div>';
+  }
+
+  // Report body
+  let reportHtml = '';
+  if (hasReport) {
+    reportHtml = '<div class="session-report">' + safe(d.reportText) + '</div>';
+  } else if (hasError) {
+    reportHtml = '<div class="session-report" style="color:#e05050;">Report generation failed. Tap Regenerate to try again.\n\nError: ' + safe(d.reportError) + '</div>';
+  } else if (blockCount > 0) {
+    reportHtml = '<div class="session-report" style="color:#adc5d8;">Report generates automatically at 8pm.\n\n' + blockCount + ' chat block' + (blockCount===1?'':'s') + ' saved · ' + msgCount + ' messages.</div>';
+  } else {
+    reportHtml = '<div class="session-report" style="color:#adc5d8;">No chat data saved for this day yet.</div>';
+  }
+
+  const card = document.createElement('div');
+  card.className = 'session-card';
+  card.dataset.dayId = d.date;
+  card.innerHTML =
+    '<div class="session-top">' +
+      '<div class="session-emo">' + style.emoji + '</div>' +
+      '<div class="session-info">' +
+        '<div class="session-date">' + dateStr + (isFlagged ? '<span class="concern-pill">⚠️ Flagged</span>' : '') + '</div>' +
+        '<div class="session-meta">' + blockCount + ' chat block' + (blockCount===1?'':'s') + ' · ' + msgCount + ' messages' + (hasReport ? ' · Report ready' : ' · Pending 8pm') + '</div>' +
+      '</div>' +
+    '</div>' +
+    bannerHtml +
+    reportHtml +
+    '<div class="session-actions" style="display:none;">' +
+      '<button class="sact-btn sec" onclick="collapseCard(this)">Close</button>' +
+      '<button class="sact-btn pri" onclick="copyReport(this)">Copy 📋</button>' +
+      '<button class="sact-btn pri" style="background:linear-gradient(135deg,#6BCB77,#4aaf58);" onclick="regenReport(this,\'' + d.date + '\')">↺ Regen</button>' +
+    '</div>';
+
+  card.querySelector('.session-top').addEventListener('click', () => toggleCard(card));
+  listEl.appendChild(card);
+}
+
+// === RENDER LEGACY SESSION CARD ===
+function renderSessionCard(s, listEl) {
+  const safe = s2 => (s2||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const emo = s.emotionalArc || 'calm';
+  const style = EMO_STYLE[emo] || EMO_STYLE.calm;
+  const date = new Date(s.date);
+  const dateStr = date.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'});
+  const timeStr = date.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+  const isFlagged = s.concerningLanguage && Array.isArray(s.concerns) && s.concerns.length > 0;
+
+  let bannerHtml = '';
+  if (isFlagged) {
+    const phraseLines = s.concerns.map(c => {
+      const t = c.timestamp ? new Date(c.timestamp).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      return '<span class="cb-phrase">"' + safe(c.phrase||'') + '" — ' + t + '</span>';
+    }).join('');
+    bannerHtml = '<div class="concern-banner" style="margin:12px 0 0;"><span class="cb-title">⚠️ Concerning Language</span>' + phraseLines + '<span class="cb-foot">Mom and Dad are aware.</span></div>';
+  }
+
+  let arc = '';
+  if (s.summary) { const m = s.summary.match(/EMOTIONAL ARC[^\n]*\n([^\n]+)/); if (m) arc = m[1].trim(); }
+
+  const card = document.createElement('div');
+  card.className = 'session-card';
+  card.innerHTML =
+    '<div class="session-top">' +
+      '<div class="session-emo">' + style.emoji + '</div>' +
+      '<div class="session-info">' +
+        '<div class="session-date">' + dateStr + (isFlagged ? '<span class="concern-pill">⚠️ Flagged</span>' : '') + '</div>' +
+        '<div class="session-meta">' + timeStr + (s.messageCount ? ' · ' + s.messageCount + ' messages' : '') + '</div>' +
+      '</div>' +
+    '</div>' +
+    (arc ? '<div class="session-arc">' + arc + '</div>' : '') +
+    bannerHtml +
+    '<div class="session-report">' + safe(s.summary||'No report saved.') + '</div>' +
+    '<div class="session-actions" style="display:none;">' +
+      '<button class="sact-btn sec" onclick="collapseCard(this)">Close</button>' +
+      '<button class="sact-btn pri" onclick="copyReport(this)">Copy 📋</button>' +
+    '</div>';
+
+  card.querySelector('.session-top').addEventListener('click', () => toggleCard(card));
+  listEl.appendChild(card);
+}
+
+// === REGENERATE REPORT ===
+async function regenReport(btn, dateKey) {
+  const card = btn.closest('.session-card');
+  const akey = localStorage.getItem('akey') || '';
+  if (!akey) { alert('API key not found. Open the buddy app first to set it up.'); return; }
+
+  btn.textContent = '⏳ Generating...';
+  btn.disabled = true;
+
+  try {
+    // Pull the day doc
+    const snap = await db.collection('users').doc('garrett').collection('days').doc(dateKey).get();
+    if (!snap.exists) { btn.textContent = '↺ Regen'; btn.disabled = false; return; }
+    const d = snap.data();
+    const blocks = d.chatBlocks || [];
+    const allMessages = blocks.flatMap(b => b.messages || []);
+    if (allMessages.length < 2) { btn.textContent = 'Too short'; btn.disabled = false; return; }
+
+    const bname = localStorage.getItem('bname') || 'Nova';
+    const convo = allMessages.map(m => (m.role==='user'?'Garrett':bname)+': '+m.content).join('\n\n');
+    const trimmed = convo.split('\n\n').slice(-40).join('\n\n');
+    const dateStr = new Date(dateKey+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    const allConcerns = d.concerns || [];
+
+    const prompt =
+      'You are writing a DAILY parent report for Mot about his son Garrett (age 6, twice-exceptional gifted child, PDA profile, autism spectrum).\n'
+      +'This report covers ALL of Garrett\'s conversations with '+bname+' on '+dateStr+', across '+blocks.length+' chat session'+(blocks.length===1?'':'s')+'.\n'
+      +'CRITICAL FORMATTING: Strict 1500 token limit. Tight bullets, one sentence each. Skip sections with nothing relevant. Complete ALL sections.\n\n'
+      +'GARRETT DAILY REPORT — '+dateStr+'\n\n'
+      +'WHAT HAPPENED TODAY (3-5 bullets):\n[Key topics, moments, wins, hard spots]\n\n'
+      +'EMOTIONAL ARC (1 line):\n[How his emotional state moved across the day]\n\n'
+      +'ROOT CAUSES NOTICED (2-3 bullets):\n[Triggers, patterns, cumulative stress]\n\n'
+      +'FAMILY DYNAMICS (skip if nothing relevant):\n'
+      +'Dad (Mot): [connection moments, conflicts, openings]\nMom (Kathy): [arguments, repair moments]\nTeam note: [coordination]\n\n'
+      +'SCHOOL / WRITING (1-2 bullets, skip if nothing):\n[Resistance, avoidance, IEP-relevant]\n\n'
+      +'REGULATION WINS (1-2 bullets — always include if any):\n[Moments he caught himself or regulated]\n\n'
+      +'BEHAVIOR PATTERNS (skip if nothing):\n[Hitting, circular arguments, anticipatory collapse, limit-testing]\n\n'
+      +'EATING / SENSORY (1 bullet, skip if nothing):\n\n'
+      +'TRY TONIGHT / TOMORROW (2-3 bullets for Mot):\n\n'
+      +'COPING STRATEGIES (1-2 bullets):\n\n'
+      +'---\nMEMORY UPDATE — paste into Claude:\nPlease add to Garrett permanent memory: [3-5 specific facts from today]\n';
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':akey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1600,messages:[{role:'user',content:prompt+'\n\nFULL CONVERSATION:\n'+trimmed}]})
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    if (!text) throw new Error('Empty response');
+
+    // Build concern banner text
+    let bannerText = '';
+    if (allConcerns.length > 0) {
+      const lines = allConcerns.map(c=>{
+        const t=c.timestamp?new Date(c.timestamp).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+        return '  • "'+c.phrase+'" — '+t;
+      }).join('\n');
+      bannerText='⚠️  CONCERNING LANGUAGE FLAG  ⚠️\n'+lines+'\n────────────────────────────────────────────\n\n';
+    }
+    const finalText = bannerText + text;
+
+    // Save back to Firestore
+    await db.collection('users').doc('garrett').collection('days').doc(dateKey).set({
+      reportGenerated: true, reportText: finalText, reportTime: new Date().toISOString(), reportError: null
+    }, {merge:true});
+
+    // Update card in place
+    const reportEl = card.querySelector('.session-report');
+    if (reportEl) reportEl.textContent = finalText;
+    btn.textContent = '✓ Done';
+    setTimeout(() => { btn.textContent = '↺ Regen'; btn.disabled = false; }, 2000);
+
+  } catch(e) {
+    console.log('regenReport error:', e);
+    btn.textContent = '↺ Retry';
+    btn.disabled = false;
+    alert('Generation failed: ' + e.message);
   }
 }
 
@@ -371,13 +568,11 @@ function toggleCard(card) {
     card.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
 }
-
 function collapseCard(btn) {
   const card = btn.closest('.session-card');
   card.classList.remove('expanded');
   card.querySelector('.session-actions').style.display = 'none';
 }
-
 function copyReport(btn) {
   const card = btn.closest('.session-card');
   const text = card.querySelector('.session-report').textContent;
