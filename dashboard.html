@@ -141,6 +141,10 @@ body{overflow-y:auto;}
   <!-- TOP-LEVEL CONCERN ALERT -->
   <div id="top-concern-alert" style="display:none;"></div>
 
+  <!-- WORLDS HE'S BUILT -->
+  <div class="section-title">🌍 Worlds Garrett Has Built</div>
+  <div id="worlds-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;"></div>
+
   <!-- TREND -->
   <div class="section-title">📈 Emotional Trend (Last 10 Sessions)</div>
   <div class="trend-wrap">
@@ -218,7 +222,36 @@ function updDots() { for (let i = 0; i < 4; i++) document.getElementById('d' + i
 
 // === LOAD DASHBOARD ===
 async function loadDashboard() {
-  await Promise.all([loadMemory(), loadAllReports()]);
+  await Promise.all([loadMemory(), loadAllReports(), loadWorlds()]);
+}
+
+async function loadWorlds(){
+  const listEl = document.getElementById('worlds-list');
+  if(!db){ listEl.innerHTML = '<div style="color:#adc5d8;font-size:14px;font-weight:600;">Firebase not connected.</div>'; return; }
+  try {
+    const snap = await db.collection('users').doc('garrett').collection('worlds').get();
+    if(snap.empty){
+      listEl.innerHTML = '<div style="color:#adc5d8;font-size:14px;font-weight:600;padding:14px;background:rgba(255,255,255,.5);border-radius:14px;">When Garrett picks "Somewhere new" and builds a world with his buddy, it will appear here.</div>';
+      return;
+    }
+    const safe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let html = '';
+    snap.forEach(doc => {
+      const w = doc.data();
+      const created = w.created ? new Date(w.created).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+      html += '<div style="background:white;border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(30,80,140,.08);">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+        + '<div style="font-family:\'Baloo 2\',cursive;font-size:18px;font-weight:800;color:#1a2744;">🌟 ' + safe(w.name) + '</div>'
+        + '<div style="font-size:12px;color:#7a9bb5;font-weight:600;">Created ' + safe(created) + '</div>'
+        + '</div>'
+        + '<div style="font-size:14px;color:#3a5270;line-height:1.6;font-weight:500;">' + safe(w.details||'No details captured yet.') + '</div>'
+        + '</div>';
+    });
+    listEl.innerHTML = html;
+  } catch(e) {
+    console.log('loadWorlds error:', e);
+    listEl.innerHTML = '<div style="color:#e05050;font-size:14px;font-weight:600;">Error loading worlds: ' + e.message + '</div>';
+  }
 }
 
 async function loadMemory() {
@@ -508,7 +541,9 @@ async function regenReport(btn, dateKey) {
       +'EMOTIONAL ARC (1 line):\n[How his emotional state moved across the day]\n\n'
       +'ROOT CAUSES NOTICED (2-3 bullets):\n[Triggers, patterns, cumulative stress]\n\n'
       +'FAMILY DYNAMICS (skip if nothing relevant):\n'
-      +'Dad (Mot): [connection moments, conflicts, openings]\nMom (Kathy): [arguments, repair moments]\nTeam note: [coordination]\n\n'
+      +'Dad (Mot): [connection moments, conflicts, openings]\n'
+      +'Mom (Kathy): [arguments, repair moments, targeted aggression if present — flag "terrible mom" / "ruin your day" language specifically. If present add: "Kathy check-in: this pattern has been daily — she may need her own support."]\n'
+      +'Team note: [coordination]\n\n'
       +'SCHOOL / WRITING (1-2 bullets, skip if nothing):\n[Resistance, avoidance, IEP-relevant, peer connection wishes, self-awareness about learning]\n\n'
       +'REGULATION WINS (1-2 bullets — always include if any):\n[Moments he caught himself or regulated]\n\n'
       +'BEHAVIOR PATTERNS (skip if nothing):\n[Hitting, F-words, circular arguments, anticipatory collapse, limit-testing, help-rejection collision, instruction-skipping, bare minimum compliance, self-punishment. For each: what was the stacking event before it?]\n\n'
