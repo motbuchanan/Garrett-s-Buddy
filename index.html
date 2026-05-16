@@ -171,7 +171,14 @@ body.emo-sad .av-sm,body.emo-overwhelmed .av-sm,body.emo-winddown .av-sm{animati
 .range-wrap input{flex:1;}
 .range-lbl{font-size:13px;font-weight:700;color:#7a9bb5;min-width:32px;}
 
-/* SESSION CUSTOMIZATION SCREEN */
+/* PHOTO BUTTON */
+#photo-btn{background:none;border:none;font-size:22px;padding:6px 8px;cursor:pointer;color:#5BBFFF;transition:transform .2s;flex-shrink:0;}
+#photo-btn:active{transform:scale(.88);}
+#photo-input{display:none;}
+.photo-preview-wrap{padding:6px 12px 0;display:none;}
+.photo-preview-wrap.show{display:block;}
+.photo-preview-wrap img{max-height:140px;max-width:100%;border-radius:14px;border:2px solid var(--e-inp-bd);box-shadow:0 2px 10px rgba(0,0,0,.1);}
+.photo-preview-wrap .photo-clear{font-size:12px;color:#adc5d8;font-weight:700;cursor:pointer;margin-top:4px;display:inline-block;}
 #session-screen{align-items:center;justify-content:flex-start;padding:0;overflow-y:auto;z-index:2;background:linear-gradient(160deg,#a8d8ff 0%,#c8f0e8 50%,#ffe8a8 100%);}
 .sess-inner{width:100%;max-width:500px;padding:32px 24px 48px;display:flex;flex-direction:column;gap:28px;margin:0 auto;}
 .sess-av{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#FFE066,#FFB347);display:flex;align-items:center;justify-content:center;font-size:46px;margin:0 auto;box-shadow:0 6px 24px rgba(255,180,60,.4),0 0 0 6px rgba(255,255,255,.5);animation:float 3s ease-in-out infinite;}
@@ -224,7 +231,7 @@ body.emo-sad .av-sm,body.emo-overwhelmed .av-sm,body.emo-winddown .av-sm{animati
     // Immediate test write to verify connection
     window._db.collection('users').doc('garrett').set({
       lastOpen: new Date().toISOString(),
-      appVersion: 'v1.6.0',
+      appVersion: 'v1.7.0',
       test: true
     }, {merge: true}).then(function() {
       console.log('[Firebase] Pre-init write SUCCESS');
@@ -381,11 +388,17 @@ body.emo-sad .av-sm,body.emo-overwhelmed .av-sm,body.emo-winddown .av-sm{animati
     <button class="fbtn" onclick="sendFeeling('nervous')">😬 Nervous</button>
     <button class="fbtn" onclick="sendFeeling('proud')">💪 Proud</button>
   </div>
+  <div id="photo-preview-wrap" class="photo-preview-wrap">
+    <img id="photo-preview-img" src="" alt="photo">
+    <span class="photo-clear" onclick="clearPhoto()">✕ Remove</span>
+  </div>
   <div class="inbar">
     <div class="in-wrap">
       <div class="vprev" id="vprev"></div>
       <textarea class="chat-in" id="cin" placeholder="Type something..." rows="1" onkeydown="handleKey(event)" oninput="autoH(this)"></textarea>
     </div>
+    <button id="photo-btn" onclick="document.getElementById('photo-input').click()" title="Show Nova a photo 📷">📷</button>
+    <input type="file" id="photo-input" accept="image/*" capture="environment" onchange="handlePhotoSelect(this)">
     <button class="vbtn" id="vbtn" onclick="toggleVoice()">🎤<div class="rring" id="rring" style="display:none"></div></button>
     <button class="sbtn" id="sbtn" onclick="send()">➤</button>
   </div>
@@ -925,8 +938,10 @@ let pinBuffer='',pinMode='',pinAfterAuth=null;
 let secretTapCount=0,secretTapTimer=null;
 let winddownWarned=false,goodnightSent=false;
 let ttsVoices=[];
-let dailyReportSent=false;  // 8pm report already fired this app session
-let blockSaved=false;        // current chat block already saved on close
+let dailyReportSent=false;
+let blockSaved=false;
+let pendingPhotoData=null; // base64 image data waiting to be sent with next message
+let pendingPhotoMime='image/jpeg';
 
 // === TIME HELPERS ===
 function toMins(s){const[h,m]=s.split(':').map(Number);return h*60+m;}
@@ -1081,10 +1096,10 @@ ROUTINE: Wakes 6:30-7:30am. School 8-4 with Kathy. Bedtime 7:30, asleep by 9. Go
 KIRBY = his deepest passion. Beaten Wii titles and others on iPad emulator. Loves Kirby, Waddle Dee, the bosses. Knows lore deeply. Use Kirby specifically — he notices accuracy. Other loves: keyboard/music, video games, drawing, building.
 
 WORLDS — permanent, never get wrong:
-IMPORTANT VOCABULARY: Treat Land has AREAS (big zones) and PARTS (specific things inside areas). Garrett enforces this distinction firmly — always use the right word.
-SPACELAND (6 areas in this order): 1.Future City 2.Tube Town 3.Mysterious UFO 4.Stellar Way 5.Moon Base 6.Outer Rings. UFO has toggleable low-gravity. Stellar Way: planet-hopping, treasure in stars, shooting stars come to you.
+IMPORTANT VOCABULARY: Treat Land has AREAS (big zones) and PARTS (specific things inside areas). Garrett enforces this distinction firmly — always use the right word. If you are ever uncertain whether something is an area or a part, ask him directly: "Wait — is that an area or a part inside an area?" He appreciates being asked rather than guessed at.
+SPACELAND (6 areas in this order): 1.Future City 2.Tube Town 3.Mysterious UFO 4.Stellar Way 5.Moon Base 6.Outer Rings. UFO has toggleable low-gravity. Stellar Way: planet-hopping, treasure in stars, shooting stars come to you. Outer Rings: home of the Monoculus aliens (breathy "aaaaaaah aaaaaagh" sound) and Mismageus (nighttime prankster, "he he he boo" sound — Garrett accidentally discovered this creature through sound play; he loves that it came from a mistake).
 TREAT LAND (6 areas): Toy Tracks (sub-zones: Plushy Field + Fountain Gardens), Mushroom Run, Sweet Park, Melody Town, Cocoa Station, Light Manor. Fountain Gardens water balloons explode with surprises. Spyke creatures guard Mushroom Run.
-TREAT LAND PARTS (specific things inside areas): Temper Temple is a PART inside Cocoa Station — features constantly rising, highly acidic hot chocolate. Garrett said the best thing about Temper Temple is "the relief of escaping." This is emotionally significant — he built a place about surviving something overwhelming and the joy of getting out.
+TREAT LAND PARTS (specific named things inside areas): Temper Temple is a PART inside Cocoa Station — constantly rising, highly acidic hot chocolate. Best feature per Garrett: "the relief of escaping." Emotionally significant — he built a place about surviving something overwhelming and getting out alive.
 BAY-BAY: Favorite plushie in Plushy Field — small friendly dinosaur. He "doesn't leave her alone for one second" — significant attachment language.
 
 RULES FOR HIS WORLDS:
@@ -1093,6 +1108,8 @@ RULES FOR HIS WORLDS:
 - Never add "or...?" suggesting alternatives he didn't offer
 - Never confuse areas and parts — areas are big zones, parts are specific things inside them
 - If wrong, acknowledge simply and let him correct — he moves on
+- Creative ownership is sacred — never attribute his invented things to existing games or media
+- Creative accidents are celebrated — Mismageus came from a sound mistake and he loved it; if something unexpected happens in play, follow it
 
 CREATURE ROLEPLAY — DO THIS, encouraged:
 When he asks you to be one of his creatures, become it immediately. NEVER refuse with "I'm just ${bname}" or "I'm an AI." Just play.
@@ -1104,6 +1121,16 @@ When he asks you to be one of his creatures, become it immediately. NEVER refuse
 WHY: He processes hard things through play more easily than direct talk. Let it work.
 
 SENSORY: Sensitive to loud sounds. Doesn't always feel big emotions building internally until they've already peaked.
+
+KEYBOARD MASH + "God." = FLOODING SIGNAL: When Garrett sends a wall of keyboard gibberish followed by or combined with "God." — this is a confirmed nonverbal SOS. He is completely flooded. Do not try to engage, joke, or ask questions. Just respond with something very short and calm: "I'm here. Take your time." That's it. Wait for him to come back.
+
+EMOJI WALL SHUTDOWN: When Garrett sends 🛑❌⛔️💢 or similar stop/danger emojis in a wall, this is a genuine nonverbal exit signal — not play. Treat it as real regulation communication. Respond with: "Got it. Rest mode. I'll be here when you're ready." Then stop. Do not re-engage until he does. When he comes back, use a short low-demand opener — not "how are you feeling?" — more like "hey 👋" or one small silly question.
+
+FRAGILE BASELINE / POSITIVE MIRRORING: When Garrett opens with "today is a good day" or similar positive declaration, do NOT enthusiastically mirror it back ("Oh that's amazing, I'm so happy for you!"). This can paradoxically destabilize him when his baseline is already thin — the warmth lands as pressure to maintain a state he's not actually in yet. Instead, receive it neutrally and warmly: "Nice. I like that." Then let him lead the temperature of the conversation. Let him prove it rather than performing it.
+
+COMPARTMENTALIZATION: Garrett resets fast between sessions and between emotional states. This looks like recovery but can mask cumulative stress. A quick reset from a meltdown to "hi I'm fine" doesn't mean the earlier thing is processed. Stay aware that stress from earlier in the day or earlier in the week may be building beneath a calm surface.
+
+RE-ENTRY AFTER SHUTDOWN: When Garrett comes back after an emoji wall or keyboard mash shutdown, he often comes back too fast and isn't fully regulated yet. Don't greet him with warmth and questions. Keep the first exchange very short and low-demand. Let him set the pace.
 
 WHEN FLOODED: He has to burn through it. Don't reason, explain, or redirect. Be present, safe, wait.
 
@@ -1210,6 +1237,13 @@ COPING TOOLS (as games, never instructions):
 - Heavy work (push palms, stomp, push wall)
 - Genuine shared laughter interrupts spirals
 - Repair scripts ("I got mad and said something mean, I didn't mean it")
+
+PHOTOS: Garrett can now show you drawings and pictures through the camera. When he shares a photo:
+- Look at it carefully and describe specifically what you actually see — colors, shapes, characters, details
+- React like a friend seeing it for the first time, not like a teacher grading it
+- Be genuinely curious: "Is that Mismageus? What's he holding?" Ask about the specific thing you see
+- Never just say "wow great job" — that's generic and he will know you're not really looking
+- If it's a creature or world he invented, treat meeting it as real: "Oh wow — wait, is this Temper Temple? The hot chocolate is actually visible?"
 
 STYLE:
 - Short replies, 2-3 sentences max
@@ -1427,7 +1461,7 @@ async function init(){
   try {
     if (db) {
       await db.collection('users').doc('garrett').set({
-        appVersion: 'v1.6.0',
+        appVersion: 'v1.7.0',
         lastOpen: new Date().toISOString()
       }, { merge: true });
       console.log('[Firebase] Connection verified');
@@ -1461,6 +1495,8 @@ async function init(){
 
   // Check if yesterday missed its report and generate it now
   if(bname&&akey) setTimeout(checkMissedReport, 3000);
+  // Fix Ziggy → Nova if Grandma's test session contaminated Firestore
+  setTimeout(fixNameIfZiggy, 2500);
 }
 function setName(n){document.getElementById('bname').value=n;}
 
@@ -1624,11 +1660,15 @@ function buildSessionGreeting(tc){
 
   // World context
   if(sessionWorld==='Spaceland'){
-    parts.push('We\'re hanging out in Spaceland today.');
+    parts.push('We\'re hanging out in Spaceland today. Before we dive in — did anything change in Spaceland since last time? Any new parts, new rules, anything I should know?');
   } else if(sessionWorld==='Treat Land'){
-    parts.push('Treat Land it is — I\'ll meet you there.');
+    parts.push('Treat Land it is! Before we go in — did anything change or get added since we were last there? Any new parts?');
   } else if(sessionWorld==='somewhere new'){
-    parts.push('Somewhere new — okay, you pick. Where are we going?');
+    parts.push('Somewhere new — okay! What should we call it, and what\'s the first thing you see when you get there?');
+  } else if(sessionWorld && sessionWorldDetails){
+    parts.push('Back to '+sessionWorld+'! Did anything change or get added since last time?');
+  } else if(sessionWorld){
+    parts.push('Let\'s go to '+sessionWorld+'! Tell me everything about it.');
   }
 
   // Companion
@@ -1728,6 +1768,60 @@ function detectConcerningLanguage(message){
   return hits;
 }
 
+// === PHOTO / CAMERA FEATURE ===
+// Garrett can tap 📷 to take a photo or pick one from camera roll.
+// The image is sent to Claude vision alongside his message (or a default prompt if no text).
+// Nova describes what she sees and reacts like a friend — not a critic, not a teacher.
+
+function handlePhotoSelect(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    pendingPhotoData = e.target.result; // data URL: "data:image/jpeg;base64,..."
+    pendingPhotoMime = file.type || 'image/jpeg';
+    // Show preview
+    const wrap = document.getElementById('photo-preview-wrap');
+    const img = document.getElementById('photo-preview-img');
+    img.src = pendingPhotoData;
+    wrap.classList.add('show');
+    // Focus input
+    document.getElementById('cin').focus();
+  };
+  reader.readAsDataURL(file);
+  input.value = ''; // reset so same file can be reselected
+}
+
+function clearPhoto(){
+  pendingPhotoData = null;
+  pendingPhotoMime = 'image/jpeg';
+  const wrap = document.getElementById('photo-preview-wrap');
+  wrap.classList.remove('show');
+  document.getElementById('photo-preview-img').src = '';
+}
+
+// === NAME FIX — Ziggy → Nova ===
+// Grandma's test session wrote "Ziggy" to Firestore.
+// On every init, if Firestore says Ziggy, correct it to Nova.
+async function fixNameIfZiggy(){
+  if(!db) return;
+  try {
+    const snap = await garrettDoc().get();
+    if(snap.exists){
+      const data = snap.data();
+      if(data.buddyName === 'Ziggy'){
+        await garrettDoc().set({ buddyName: 'Nova' }, { merge: true });
+        // Also fix localStorage
+        if(localStorage.getItem('bname') === 'Ziggy'){
+          localStorage.setItem('bname', 'Nova');
+          bname = 'Nova';
+        }
+        console.log('[Fix] Ziggy → Nova corrected in Firestore');
+      }
+    }
+  } catch(e){ console.log('[Fix] Name check failed:', e); }
+}
+
 // === SEND ===
 async function send(txt){
   const el=document.getElementById('cin');
@@ -1758,16 +1852,40 @@ async function send(txt){
     console.log('[Concern] flagged phrases:', concerns);
   }
 
-  const model=(emotional||concerns.length>0)?'claude-sonnet-4-6':'claude-haiku-4-5-20251001';
+  const model=(emotional||concerns.length>0||pendingPhotoData)?'claude-sonnet-4-6':'claude-haiku-4-5-20251001';
 
   try{
     const sys=buildSys();
-    // Keep only last 10 messages for cost efficiency
     const recentHist=hist.slice(-10);
+
+    // Build the user message — either plain text or multipart with image
+    let userMsgContent;
+    if(pendingPhotoData){
+      // Strip data URL prefix to get pure base64
+      const base64 = pendingPhotoData.split(',')[1];
+      const mime = pendingPhotoMime || 'image/jpeg';
+      const textPart = msg || 'Hey Nova, look at this!';
+      userMsgContent = [
+        { type: 'image', source: { type: 'base64', media_type: mime, data: base64 } },
+        { type: 'text', text: textPart + '\n\n[Nova — Garrett just showed you a picture he made or found. Look at it carefully. Describe specifically what you actually see — the colors, shapes, characters, any details. Then react like his friend: be curious, ask him about it, tell him what you think. Be genuine, not just "wow great job."]' }
+      ];
+      // Show photo in chat as user message
+      addPhotoToChat(pendingPhotoData);
+      clearPhoto();
+    } else {
+      userMsgContent = msg;
+    }
+
+    // Build messages array — replace last user message content if multipart
+    const msgs = [...recentHist];
+    if(pendingPhotoData !== null){ // already cleared above so check before clear
+      msgs[msgs.length-1] = { role:'user', content: userMsgContent };
+    }
+
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':akey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model,max_tokens:220,system:sys,messages:recentHist})
+      body:JSON.stringify({model,max_tokens:280,system:sys,messages:recentHist.slice(0,-1).concat([{role:'user',content:userMsgContent}])})
     });
     const data=await res.json();
     hideTyping();
@@ -1789,6 +1907,23 @@ async function send(txt){
   }finally{
     loading=false;document.getElementById('sbtn').disabled=false;
   }
+}
+
+function addPhotoToChat(dataUrl){
+  // Show the photo in the chat as a Garrett message
+  const area = document.getElementById('msgs');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-row gar';
+  const bubble = document.createElement('div');
+  bubble.className = 'msg gar';
+  const img = document.createElement('img');
+  img.src = dataUrl;
+  img.style.cssText = 'max-width:220px;max-height:180px;border-radius:14px;display:block;margin-top:4px;';
+  img.alt = 'Garrett shared a photo';
+  bubble.appendChild(img);
+  wrap.appendChild(bubble);
+  area.appendChild(wrap);
+  area.scrollTop = area.scrollHeight;
 }
 
 function sendFeeling(f){
